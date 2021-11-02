@@ -280,7 +280,7 @@ def create_resource(waldur_resource):
             "firstName": "Aleksander",
             "lastName": "Veske",
             "email": "aleksander.daniel.veske@ut.ee",
-            "phone": "372",
+            "phone": "",
             "position": "intern",
             "organisation": None
         },
@@ -289,7 +289,7 @@ def create_resource(waldur_resource):
                 "firstName": "test",
                 "lastName": "test",
                 "email": "test@example.com",
-                "phone": "0",
+                "phone": "",
                 "position": None,
                 "organisation": None
             }
@@ -434,7 +434,7 @@ def get_or_create_eosc_provider(customer=None):  # only get atm
         return provider, False
 
 
-def get_waldur_resources():
+def get_waldur_offerings():
     list_resources = get_waldur_client().list_marketplace_offerings(
         {'customer_uuid': '1fb1f539aa6a4b38a33a5f121f4ac5b8'})
     return list_resources
@@ -442,20 +442,19 @@ def get_waldur_resources():
 
 # TODO finish this method
 def process_offers():  # eosc_provider_portal=None, eosc_marketplace=None, deployment=None
-    # waldur_resources = get_waldur_resources(deployment, token)
-    waldur_resources = get_waldur_resources()
+    waldur_offerings = get_waldur_offerings()
 
-    for waldur_resource in waldur_resources:
-        provider, created = get_or_create_eosc_provider(waldur_resource['customer'])  # , eosc_provider_portal
+    for waldur_offering in waldur_offerings:
+        provider, created = get_or_create_eosc_provider(waldur_offering['customer'])  # , eosc_provider_portal
         if created:
             logging.info(f'Provider has been created, pending approval')
         if provider['is_approved']:
-            eosc_resource, eosc_resource_created = get_or_create_eosc_resource(waldur_resource)  # eosc_provider_portal
+            eosc_resource, eosc_resource_created = get_or_create_eosc_resource(waldur_offering)  # eosc_provider_portal
             if eosc_resource_created:
                 logging.info('New resource has been created in EOSC', eosc_resource)
             eosc_resource_offers, offer_created = get_or_create_eosc_resource_offer(
                 eosc_resource,
-                waldur_resource)  # , eosc_marketplace
+                waldur_offering)  # , eosc_marketplace
             if offer_created:
                 logging.info('New offering has been created in EOSC', eosc_resource)
 
