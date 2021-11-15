@@ -5,6 +5,9 @@ import urllib.parse
 import requests
 from waldur_client import WaldurClient
 
+from urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
+
 logging.getLogger("requests").setLevel(logging.WARNING)
 logging.basicConfig(level=logging.INFO, format=f'[%(asctime)s] %(filename)s:%(lineno)d %(levelname)s - '
                                                f'%(message)s')
@@ -17,11 +20,15 @@ REFRESH_TOKEN = os.environ.get('REFRESH_TOKEN')
 CLIENT_ID = os.environ.get('CLIENT_ID')
 REFRESH_TOKEN_URL = os.environ.get('REFRESH_TOKEN_URL')
 WALDUR_URL = os.environ.get('WALDUR_URL')
+CUSTOMER_UUID = os.environ.get('CUSTOMER_UUID')
+ORGANIZATION_EID = os.environ.get('ORGANIZATION_EID')
 
 RESOURCE_LIST_URL = "/api/v1/resources/"
 RESOURCE_URL = "/api/v1/resources/%s/"
 OFFER_LIST_URL = "/api/v1/resources/%s/offers"
 OFFER_URL = "/api/v1/resources/%s/offers/%s"
+PROVIDER_SERVICES_URL = "provider/services/%s"
+PROVIDER_URL = "provider/%s"
 WALDUR_API = urllib.parse.urljoin(WALDUR_URL, 'api/')
 
 
@@ -64,7 +71,7 @@ def offering_request_post_patch(offer_name: str, offer_description: str, offer_p
         'order_type': 'order_required',
         'primary_oms_id': 2,
         'oms_params': {},
-        'order_url': 'https://example.com/',  # plan['url'],  # "is not a valid URL"
+        'order_url': WALDUR_URL.replace("https://api.", "https://"),  # plan['url'],  # "is not a valid URL"
         'internal': internal,
         'parameters': offer_parameters,
     }
@@ -82,7 +89,7 @@ def offering_request_delete():
 def get_resource_list():
     headers = resource_and_offering_request()
     response = requests.get(urllib.parse.urljoin(EOSC_URL, RESOURCE_LIST_URL),
-                            headers=headers)
+                            headers=headers, verify=False)
     resource_list_data = response.json()
     return resource_list_data
 
@@ -90,7 +97,7 @@ def get_resource_list():
 def get_resource(resource_id):
     headers = resource_and_offering_request()
     response = requests.get(urllib.parse.urljoin(EOSC_URL, RESOURCE_URL % (str(resource_id))),
-                            headers=headers)
+                            headers=headers, verify=False)
     resource_data = response.json()
     return resource_data
 
@@ -98,7 +105,7 @@ def get_resource(resource_id):
 def get_offer_list_of_resource(resource_id):
     headers = resource_and_offering_request()
     response = requests.get(urllib.parse.urljoin(EOSC_URL, OFFER_LIST_URL % (str(resource_id))),
-                            headers=headers)
+                            headers=headers, verify=False)
     if response.status_code == 200:
         return response.json()
     else:
@@ -119,14 +126,14 @@ def create_offer_for_resource(eosc_resource_id: str, offer_name: str, offer_desc
         'order_type': 'order_required',
         'primary_oms_id': 2,
         'oms_params': {},
-        'order_url': 'https://example.com/',  # plan['url'],  # "is not a valid URL"
+        'order_url': WALDUR_URL.replace("https://api.", "https://"),  # plan['url'],  # "is not a valid URL"
         'internal': internal,
         'parameters': offer_parameters,
     }
 
     response = requests.post(urllib.parse.urljoin(EOSC_URL, OFFER_LIST_URL % eosc_resource_id),
                              headers=headers,
-                             data=json.dumps(data))
+                             data=json.dumps(data), verify=False)
     if response.status_code != 201:
         logging.error('Failed to create an offer.', response.status_code, response.text)
     else:
@@ -141,7 +148,7 @@ def patch_offer_from_resource(resource_id, offer_id, waldur_offering_data, offer
                                                 offer_parameters=offer_parameters)
     response = requests.patch(urllib.parse.urljoin(EOSC_URL, OFFER_URL % (str(resource_id), str(offer_id))),
                               headers=headers,
-                              data=data)
+                              data=data, verify=False)
     patch_offer_data = response.json()
     return patch_offer_data
 
@@ -149,7 +156,7 @@ def patch_offer_from_resource(resource_id, offer_id, waldur_offering_data, offer
 def delete_offer_from_resource(resource_id, offer_id):
     headers = offering_request_delete()
     response = requests.delete(urllib.parse.urljoin(EOSC_URL, OFFER_URL % (str(resource_id), str(offer_id))),
-                               headers=headers)
+                               headers=headers, verify=False)
     delete_offer_data = response.json()
     return delete_offer_data
 
@@ -179,8 +186,6 @@ def sync_offer(eosc_resource_id, waldur_resource):
             "value_type": "string",
             "unit": "",
         }]
-        # TODO: 2. Add description field - always present, optional
-        # TODO 3. input parameters from offering
         for component in waldur_resource['components']:
             if component['billing_type'] == 'limit':
                 parameters.append(
@@ -228,6 +233,7 @@ def sync_offer(eosc_resource_id, waldur_resource):
 
 
 def create_resource(waldur_resource):
+    contact = get_waldur_client().list_customers({"name": "Test4All"})[0]['owners'][7]  # my name atm
     headers = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -235,30 +241,33 @@ def create_resource(waldur_resource):
     }
     data = {
         "name": waldur_resource['name'],
-        "resourceOrganisation": "tnp",  # waldur_offering['customer_name']
+        "resourceOrganisation": ORGANIZATION_EID,  # waldur_offering['customer_name']
         "resourceProviders": [
-            "tnp"  # waldur_offering['customer_name']
+            ORGANIZATION_EID  # waldur_offering['customer_name']
         ],
-        "webpage": "https://example.com",  # waldur_offering['url']
+        "webpage": WALDUR_URL.replace("https://api.", "https://"),  # waldur_offering['url'] , "https://example.com"
         "description": waldur_resource['description'] or 'sample text',
         "tagline": waldur_resource['name'].lower(),
-        "logo": "https://example.com",
+        "logo": waldur_resource['thumbnail'] or "https://etais.ee/images/logo.png",
         "multimedia": [
         ],
         "useCases": [
         ],
+        # ???
         "scientificDomains": [
             {
                 "scientificDomain": "scientific_domain-agricultural_sciences",
                 "scientificSubdomain": "scientific_subdomain-agricultural_sciences-agricultural_biotechnology"
             }
         ],
+        # ???
         "categories": [
             {
                 "category": "category-aggregators_and_integrators-aggregators_and_integrators",
                 "subcategory": "subcategory-aggregators_and_integrators-aggregators_and_integrators-applications"
             }
         ],
+        # ???
         "targetUsers": [
             "target_user-businesses"
         ],
@@ -277,25 +286,30 @@ def create_resource(waldur_resource):
         "resourceGeographicLocations": [
         ],
         "mainContact": {
-            "firstName": "Aleksander",
-            "lastName": "Veske",
-            "email": "aleksander.daniel.veske@ut.ee",
+            "firstName": contact['full_name'].split(" ")[0] or "Name",
+            "lastName": contact['full_name'].split(" ")[-1] or "Lastname",
+            "email": waldur_resource['attributes']['vpc_Support_email'] if len(
+                waldur_resource['attributes']) > 0 else "etais@etais.ee",  # ???
             "phone": "",
-            "position": "intern",
+            "position": "",
             "organisation": None
         },
         "publicContacts": [
             {
-                "firstName": "test",
-                "lastName": "test",
-                "email": "test@example.com",
-                "phone": "",
-                "position": None,
-                "organisation": None
+                # "firstName": "",
+                # "lastName": "",
+                "email": waldur_resource['attributes']['vpc_Support_email'] if len(
+                    waldur_resource['attributes']) > 0 else "etais@etais.ee",
+                # "phone": "",
+                # "position": None,
+                # "organisation": None
             }
         ],
-        "helpdeskEmail": "helpdesk@example.com",
-        "securityContactEmail": "security@example.com",
+        "helpdeskEmail": waldur_resource['attributes']['vpc_Support_email'] if len(
+            waldur_resource['attributes']) > 0 else "etais@etais.ee",
+        "securityContactEmail": waldur_resource['attributes']['vpc_Support_email'] if len(
+            waldur_resource['attributes']) > 0 else "etais@etais.ee",
+        # ???
         "trl": "trl-1",
         "lifeCycleStatus": None,
         "certifications": [
@@ -334,7 +348,8 @@ def create_resource(waldur_resource):
         "paymentModel": None,
         "pricing": None
     }
-    response = requests.post(urllib.parse.urljoin(OFFERING_URL, 'resource/'), headers=headers, data=json.dumps(data))
+    response = requests.post(urllib.parse.urljoin(OFFERING_URL, 'resource/'), headers=headers, data=json.dumps(data),
+                             verify=False)
     if response.status_code == 409:
         logging.error(f'Error: {response.text}')
     r = response.json()
@@ -364,7 +379,8 @@ def get_resource_by_id(resource_id):
     headers = {
         'Accept': 'application/json'
     }
-    response = requests.get(urllib.parse.urljoin(OFFERING_URL, f'resource/{resource_id}'), headers=headers)
+    response = requests.get(urllib.parse.urljoin(OFFERING_URL, f'resource/{resource_id}'), headers=headers,
+                            verify=False)
     data = response.json()
     return data
 
@@ -373,7 +389,9 @@ def get_all_resources_from_provider():
     headers = {
         'Accept': 'application/json'
     }
-    response = requests.get(urllib.parse.urljoin(OFFERING_URL, 'provider/services/tnp'), headers=headers)
+    response = requests.get(urllib.parse.urljoin(OFFERING_URL, PROVIDER_SERVICES_URL % ORGANIZATION_EID),
+                            # 'provider/services/tnp'
+                            headers=headers, verify=False)
     data = response.json()
     resource_names = [item['name'] for item in data]
     resource_ids = [item['id'] for item in data]
@@ -385,7 +403,8 @@ def get_all_offers_from_resource(eosc_resource_id):
         'accept': 'application/json',
         'X-User-Token': OFFERING_TOKEN,
     }
-    response = requests.get(urllib.parse.urljoin(EOSC_URL, OFFER_LIST_URL % (str(eosc_resource_id))), headers=headers)
+    response = requests.get(urllib.parse.urljoin(EOSC_URL, OFFER_LIST_URL % (str(eosc_resource_id))), headers=headers,
+                            verify=False)
     data = response.json()
     data = data['offers']
     offers_names = [item['name'] for item in data]
@@ -423,8 +442,9 @@ def get_or_create_eosc_provider(customer=None):  # only get atm
             'Accept': 'application/json',
             'Authorization': get_provider_token(),
         }
-        # tnp -
-        response = requests.get(urllib.parse.urljoin(OFFERING_URL, 'provider/tnp/'), headers=headers)
+        # tnp - test nordic provider
+        response = requests.get(urllib.parse.urljoin(OFFERING_URL, PROVIDER_URL % ORGANIZATION_EID), headers=headers,
+                                verify=False)
         provider = response.json()
     except ValueError:
         return provider, False
@@ -436,7 +456,7 @@ def get_or_create_eosc_provider(customer=None):  # only get atm
 
 def get_waldur_offerings():
     list_resources = get_waldur_client().list_marketplace_offerings(
-        {'customer_uuid': '1fb1f539aa6a4b38a33a5f121f4ac5b8'})
+        {'customer_uuid': CUSTOMER_UUID})
     return list_resources
 
 
