@@ -5,9 +5,6 @@ import urllib.parse
 import requests
 from waldur_client import WaldurClient
 
-from urllib3.exceptions import InsecureRequestWarning
-requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
-
 logging.getLogger("requests").setLevel(logging.WARNING)
 logging.basicConfig(level=logging.INFO, format=f'[%(asctime)s] %(filename)s:%(lineno)d %(levelname)s - '
                                                f'%(message)s')
@@ -89,7 +86,7 @@ def offering_request_delete():
 def get_resource_list():
     headers = resource_and_offering_request()
     response = requests.get(urllib.parse.urljoin(EOSC_URL, RESOURCE_LIST_URL),
-                            headers=headers, verify=False)
+                            headers=headers)
     resource_list_data = response.json()
     return resource_list_data
 
@@ -97,7 +94,7 @@ def get_resource_list():
 def get_resource(resource_id):
     headers = resource_and_offering_request()
     response = requests.get(urllib.parse.urljoin(EOSC_URL, RESOURCE_URL % (str(resource_id))),
-                            headers=headers, verify=False)
+                            headers=headers)
     resource_data = response.json()
     return resource_data
 
@@ -105,7 +102,7 @@ def get_resource(resource_id):
 def get_offer_list_of_resource(resource_id):
     headers = resource_and_offering_request()
     response = requests.get(urllib.parse.urljoin(EOSC_URL, OFFER_LIST_URL % (str(resource_id))),
-                            headers=headers, verify=False)
+                            headers=headers)
     if response.status_code == 200:
         return response.json()
     else:
@@ -133,7 +130,7 @@ def create_offer_for_resource(eosc_resource_id: str, offer_name: str, offer_desc
 
     response = requests.post(urllib.parse.urljoin(EOSC_URL, OFFER_LIST_URL % eosc_resource_id),
                              headers=headers,
-                             data=json.dumps(data), verify=False)
+                             data=json.dumps(data))
     if response.status_code != 201:
         logging.error('Failed to create an offer.', response.status_code, response.text)
     else:
@@ -148,7 +145,7 @@ def patch_offer_from_resource(resource_id, offer_id, waldur_offering_data, offer
                                                 offer_parameters=offer_parameters)
     response = requests.patch(urllib.parse.urljoin(EOSC_URL, OFFER_URL % (str(resource_id), str(offer_id))),
                               headers=headers,
-                              data=data, verify=False)
+                              data=data)
     patch_offer_data = response.json()
     return patch_offer_data
 
@@ -156,7 +153,7 @@ def patch_offer_from_resource(resource_id, offer_id, waldur_offering_data, offer
 def delete_offer_from_resource(resource_id, offer_id):
     headers = offering_request_delete()
     response = requests.delete(urllib.parse.urljoin(EOSC_URL, OFFER_URL % (str(resource_id), str(offer_id))),
-                               headers=headers, verify=False)
+                               headers=headers)
     delete_offer_data = response.json()
     return delete_offer_data
 
@@ -232,8 +229,7 @@ def sync_offer(eosc_resource_id, waldur_resource):
         )
 
 
-def create_resource(waldur_resource):
-    contact = get_waldur_client().list_customers({"name": "Test4All"})[0]['owners'][7]  # my name atm
+def create_resource(waldur_resource, provider_contact):
     headers = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -249,10 +245,6 @@ def create_resource(waldur_resource):
         "description": waldur_resource['description'] or 'sample text',
         "tagline": waldur_resource['name'].lower(),
         "logo": waldur_resource['thumbnail'] or "https://etais.ee/images/logo.png",
-        "multimedia": [
-        ],
-        "useCases": [
-        ],
         # ???
         "scientificDomains": [
             {
@@ -271,116 +263,48 @@ def create_resource(waldur_resource):
         "targetUsers": [
             "target_user-businesses"
         ],
-        "accessTypes": [
-        ],
-        "accessModes": [
-        ],
-        "tags": [
-        ],
+        # "accessTypes": [
+        # ],
+        # "accessModes": [
+        # ],
+        # "tags": [
+        # ],
         "geographicalAvailabilities": [
             "EO"
         ],
         "languageAvailabilities": [
             "en"
         ],
-        "resourceGeographicLocations": [
-        ],
         "mainContact": {
-            "firstName": contact['full_name'].split(" ")[0] or "Name",
-            "lastName": contact['full_name'].split(" ")[-1] or "Lastname",
-            "email": waldur_resource['attributes']['vpc_Support_email'] if len(
-                waldur_resource['attributes']) > 0 else "etais@etais.ee",  # ???
-            "phone": "",
-            "position": "",
-            "organisation": None
+            "firstName": provider_contact['name'],
+            "lastName": provider_contact['surname'],
+            "email": provider_contact['email'] or "etais@etais.ee",
         },
         "publicContacts": [
             {
-                # "firstName": "",
-                # "lastName": "",
                 "email": waldur_resource['attributes']['vpc_Support_email'] if len(
                     waldur_resource['attributes']) > 0 else "etais@etais.ee",
-                # "phone": "",
-                # "position": None,
-                # "organisation": None
             }
         ],
         "helpdeskEmail": waldur_resource['attributes']['vpc_Support_email'] if len(
             waldur_resource['attributes']) > 0 else "etais@etais.ee",
         "securityContactEmail": waldur_resource['attributes']['vpc_Support_email'] if len(
             waldur_resource['attributes']) > 0 else "etais@etais.ee",
-        # ???
         "trl": "trl-1",
-        "lifeCycleStatus": None,
-        "certifications": [
-        ],
-        "standards": [
-        ],
-        "openSourceTechnologies": [
-        ],
-        "version": None,
-        "lastUpdate": None,
-        "changeLog": [
-        ],
-        "requiredResources": [
-        ],
-        "relatedResources": [
-        ],
-        "relatedPlatforms": [
-        ],
-        "fundingBody": [
-        ],
-        "fundingPrograms": [
-        ],
-        "grantProjectNames": [
-        ],
-        "helpdeskPage": None,
-        "userManual": None,
-        "termsOfUse": None,
-        "privacyPolicy": None,
-        "accessPolicy": None,
-        "serviceLevel": None,
-        "trainingInformation": None,
-        "statusMonitoring": None,
-        "maintenance": None,
         "orderType": "order_type-order_required",
-        "order": None,
-        "paymentModel": None,
-        "pricing": None
     }
-    response = requests.post(urllib.parse.urljoin(OFFERING_URL, 'resource/'), headers=headers, data=json.dumps(data),
-                             verify=False)
+    response = requests.post(urllib.parse.urljoin(OFFERING_URL, 'resource/'), headers=headers, data=json.dumps(data))
     if response.status_code == 409:
         logging.error(f'Error: {response.text}')
     r = response.json()
     return r, response.status_code
 
 
-# # TODO: implement sub-methods
-# def is_resource_up_to_date(eosc_resource, waldur_offering):
-#     last_version = None
-#     current_version = None
-#     return last_version == current_version
-#
-#
-# def update_eosc_resource(eosc_resource, waldur_offering):
-#     return None
-#
-#
-# def are_offers_up_to_date(osc_resource_offers, waldur_offering):
-#     return None
-#
-#
-# def update_eosc_offers(eosc_resource, waldur_offering):
-#     return None
-#
-#
 def get_resource_by_id(resource_id):
     headers = {
         'Accept': 'application/json'
     }
-    response = requests.get(urllib.parse.urljoin(OFFERING_URL, f'resource/{resource_id}'), headers=headers,
-                            verify=False)
+    response = requests.get(urllib.parse.urljoin(OFFERING_URL, f'resource/{resource_id}'), headers=headers)
     data = response.json()
     return data
 
@@ -391,7 +315,7 @@ def get_all_resources_from_provider():
     }
     response = requests.get(urllib.parse.urljoin(OFFERING_URL, PROVIDER_SERVICES_URL % ORGANIZATION_EID),
                             # 'provider/services/tnp'
-                            headers=headers, verify=False)
+                            headers=headers)
     data = response.json()
     resource_names = [item['name'] for item in data]
     resource_ids = [item['id'] for item in data]
@@ -403,8 +327,7 @@ def get_all_offers_from_resource(eosc_resource_id):
         'accept': 'application/json',
         'X-User-Token': OFFERING_TOKEN,
     }
-    response = requests.get(urllib.parse.urljoin(EOSC_URL, OFFER_LIST_URL % (str(eosc_resource_id))), headers=headers,
-                            verify=False)
+    response = requests.get(urllib.parse.urljoin(EOSC_URL, OFFER_LIST_URL % (str(eosc_resource_id))), headers=headers)
     data = response.json()
     data = data['offers']
     offers_names = [item['name'] for item in data]
@@ -412,14 +335,14 @@ def get_all_offers_from_resource(eosc_resource_id):
     return offers_names, offers_ids
 
 
-def get_or_create_eosc_resource(waldur_offering):  # , eosc_provider_portal=None
+def get_or_create_eosc_resource(waldur_offering, provider_contact):  # , eosc_provider_portal=None
     resource_names, resource_ids = get_all_resources_from_provider()
     if waldur_offering['name'] in resource_names:
         existing_resource = get_resource_by_id(resource_ids[resource_names.index(waldur_offering['name'])])
         logging.info(f'Resource is already in EOSC: {existing_resource["name"]}')
         return existing_resource, False
     else:
-        resource, status_code = create_resource(waldur_offering)
+        resource, status_code = create_resource(waldur_offering, provider_contact)
         if status_code == 409:
             return resource, False
         return resource, True
@@ -443,15 +366,15 @@ def get_or_create_eosc_provider(customer=None):  # only get atm
             'Authorization': get_provider_token(),
         }
         # tnp - test nordic provider
-        response = requests.get(urllib.parse.urljoin(OFFERING_URL, PROVIDER_URL % ORGANIZATION_EID), headers=headers,
-                                verify=False)
+        response = requests.get(urllib.parse.urljoin(OFFERING_URL, PROVIDER_URL % ORGANIZATION_EID), headers=headers)
         provider = response.json()
+        provider_contact = provider['users'][-1]
     except ValueError:
         return provider, False
     else:
         logging.info(f'Existing provider name: {provider["name"]}')
         provider['is_approved'] = True
-        return provider, False
+        return provider, False, provider_contact
 
 
 def get_waldur_offerings():
@@ -460,21 +383,20 @@ def get_waldur_offerings():
     return list_resources
 
 
-# TODO finish this method
-def process_offers():  # eosc_provider_portal=None, eosc_marketplace=None, deployment=None
+def process_offers():
     waldur_offerings = get_waldur_offerings()
 
     for waldur_offering in waldur_offerings:
-        provider, created = get_or_create_eosc_provider(waldur_offering['customer'])  # , eosc_provider_portal
+        provider, created, provider_contact = get_or_create_eosc_provider(waldur_offering['customer'])
         if created:
             logging.info(f'Provider has been created, pending approval')
         if provider['is_approved']:
-            eosc_resource, eosc_resource_created = get_or_create_eosc_resource(waldur_offering)  # eosc_provider_portal
+            eosc_resource, eosc_resource_created = get_or_create_eosc_resource(waldur_offering, provider_contact)
             if eosc_resource_created:
                 logging.info('New resource has been created in EOSC', eosc_resource)
             eosc_resource_offers, offer_created = get_or_create_eosc_resource_offer(
                 eosc_resource,
-                waldur_offering)  # , eosc_marketplace
+                waldur_offering)
             if offer_created:
                 logging.info('New offering has been created in EOSC', eosc_resource)
 
