@@ -4,7 +4,7 @@ scientific_domain_and_subdomain_dict = {
         "scientific_subdomain-agricultural_sciences-agriculture_forestry_and_fisheries",
         "scientific_subdomain-agricultural_sciences-animal_and_dairy_sciences",
         "scientific_subdomain-agricultural_sciences-other_agricultural_sciences",
-        "scientific_subdomain-agricultural_sciences-veterinary_sciences"
+        "scientific_subdomain-agricultural_sciences-veterinary_sciences",
     ],
     "scientific_domain-engineering_and_technology": [
         "scientific_subdomain-engineering_and_technology-chemical_engineering",
@@ -16,24 +16,22 @@ scientific_domain_and_subdomain_dict = {
         "scientific_subdomain-engineering_and_technology-mechanical_engineering",
         "scientific_subdomain-engineering_and_technology-medical_engineering",
         "scientific_subdomain-engineering_and_technology-nanotechnology",
-        "scientific_subdomain-engineering_and_technology-other_engineering_and_technology_sciences"
+        "scientific_subdomain-engineering_and_technology-other_engineering_and_technology_sciences",
     ],
-    "scientific_domain-generic": [
-        "scientific_subdomain-generic-generic"
-    ],
+    "scientific_domain-generic": ["scientific_subdomain-generic-generic"],
     "scientific_domain-humanities": [
         "scientific_subdomain-humanities-arts",
         "scientific_subdomain-humanities-history_and_archaeology",
         "scientific_subdomain-humanities-languages_and_literature",
         "scientific_subdomain-humanities-other_humanities",
-        "scientific_subdomain-humanities-philosophy_ethics_and_religion"
+        "scientific_subdomain-humanities-philosophy_ethics_and_religion",
     ],
     "scientific_domain-medical_and_health_sciences": [
         "scientific_subdomain-medical_and_health_sciences-basic_medicine",
         "scientific_subdomain-medical_and_health_sciences-clinical_medicine",
         "scientific_subdomain-medical_and_health_sciences-health_sciences",
         "scientific_subdomain-medical_and_health_sciences-medical_biotechnology",
-        "scientific_subdomain-medical_and_health_sciences-other_medical_sciences"
+        "scientific_subdomain-medical_and_health_sciences-other_medical_sciences",
     ],
     "scientific_domain-natural_sciences": [
         "scientific_subdomain-natural_sciences-biological_sciences",
@@ -42,11 +40,9 @@ scientific_domain_and_subdomain_dict = {
         "scientific_subdomain-natural_sciences-earth_and_related_environmental_sciences",
         "scientific_subdomain-natural_sciences-mathematics",
         "scientific_subdomain-natural_sciences-other_natural_sciences",
-        "scientific_subdomain-natural_sciences-physical_sciences"
+        "scientific_subdomain-natural_sciences-physical_sciences",
     ],
-    "scientific_domain-other": [
-        "scientific_subdomain-other-other"
-    ],
+    "scientific_domain-other": ["scientific_subdomain-other-other"],
     "scientific_domain-social_sciences": [
         "scientific_subdomain-social_sciences-economics_and_business",
         "scientific_subdomain-social_sciences-educational_sciences",
@@ -56,8 +52,8 @@ scientific_domain_and_subdomain_dict = {
         "scientific_subdomain-social_sciences-political_sciences",
         "scientific_subdomain-social_sciences-psychology",
         "scientific_subdomain-social_sciences-social_and_economic_geography",
-        "scientific_subdomain-social_sciences-sociology"
-    ]
+        "scientific_subdomain-social_sciences-sociology",
+    ],
 }
 
 categories_and_subcategories_dict = {
@@ -77,7 +73,7 @@ categories_and_subcategories_dict = {
         "subcategory-applications-applications-other",
         "subcategory-applications-applications-productivity",
         "subcategory-applications-applications-social_networking",
-        "subcategory-applications-applications-utilities"
+        "subcategory-applications-applications-utilities",
     ],
     "category-compute-compute": [
         "subcategory-compute-compute-container_management",
@@ -103,7 +99,7 @@ categories_and_subcategories_dict = {
         "subcategory-consultancy_and_support-consultancy_and_support-prototype_development",
         "subcategory-consultancy_and_support-consultancy_and_support-software_development",
         "subcategory-consultancy_and_support-consultancy_and_support-technology_transfer",
-        "subcategory-consultancy_and_support-consultancy_and_support-testing"
+        "subcategory-consultancy_and_support-consultancy_and_support-testing",
     ],
     "category-data-data": [
         "subcategory-data-data-clinical_trial_data",
@@ -113,7 +109,7 @@ categories_and_subcategories_dict = {
         "subcategory-data-data-online_service_data",
         "subcategory-data-data-other",
         "subcategory-data-data-scientific_research_data",
-        "subcategory-data-data-statistical_data"
+        "subcategory-data-data-statistical_data",
     ],
     "category-data_analysis-data_analysis": [
         "subcategory-data_analysis-data_analysis-2d_3d_digitisation",
@@ -124,7 +120,7 @@ categories_and_subcategories_dict = {
         "subcategory-data_analysis-data_analysis-machine_learning",
         "subcategory-data_analysis-data_analysis-other",
         "subcategory-data_analysis-data_analysis-visualization",
-        "subcategory-data_analysis-data_analysis-workflows"
+        "subcategory-data_analysis-data_analysis-workflows",
     ],
     "category-data_management-data_management": [
         "subcategory-data_management-data_management-access",
@@ -143,7 +139,7 @@ categories_and_subcategories_dict = {
         "subcategory-data_management-data_management-processing_and_analysis-data_management-publishing",
         "subcategory-data_management-data_management-registration",
         "subcategory-data_management-data_management-transfer",
-        "subcategory-data_management-data_management-validation"
+        "subcategory-data_management-data_management-validation",
     ],
     "category-data_storage-data_storage": [
         "subcategory-data_storage-data_storage-archive",
@@ -174,7 +170,7 @@ categories_and_subcategories_dict = {
         "subcategory-education_and_training-education_and_training-related_training",
         "subcategory-education_and_training-education_and_training-required_training",
         "subcategory-education_and_training-education_and_training-training_platform",
-        "subcategory-education_and_training-education_and_training-training_tool"
+        "subcategory-education_and_training-education_and_training-training_tool",
     ],
     "category-instrument_and_equipment-instrument_and_equipment": [
         "subcategory-instrument_and_equipment-instrument_and_equipment-chromatographer",
@@ -187,7 +183,7 @@ categories_and_subcategories_dict = {
         "subcategory-instrument_and_equipment-instrument_and_equipment-other",
         "subcategory-instrument_and_equipment-instrument_and_equipment-radiation",
         "subcategory-instrument_and_equipment-instrument_and_equipment-spectrometer",
-        "subcategory-instrument_and_equipment-instrument_and_equipment-spectrophotometer"
+        "subcategory-instrument_and_equipment-instrument_and_equipment-spectrophotometer",
     ],
     "category-material_storage-material_storage": [
         "subcategory-material_storage-material_storage-archiving",
@@ -201,7 +197,7 @@ categories_and_subcategories_dict = {
         "subcategory-material_storage-material_storage-repository",
         "subcategory-material_storage-material_storage-reworking",
         "subcategory-material_storage-material_storage-sorting",
-        "subcategory-material_storage-material_storage-warehousing"
+        "subcategory-material_storage-material_storage-warehousing",
     ],
     "category-measurement_and_materials_analysis-measurement_and_materials_analysis": [
         "subcategory-measurement_and_materials_analysis-measurement_and_materials_analysis-analysis",
@@ -221,7 +217,7 @@ categories_and_subcategories_dict = {
         "subcategory-network-network-other",
         "subcategory-network-network-traffic_manager",
         "subcategory-network-network-virtual_network",
-        "subcategory-network-network-vpn_gateway"
+        "subcategory-network-network-vpn_gateway",
     ],
     "category-operations_and_infrastructure_management-operations_and_infrastructure_management": [
         "subcategory-operations_and_infrastructure_management-operations_and_infrastructure_management-accounting",
@@ -234,17 +230,15 @@ categories_and_subcategories_dict = {
         "subcategory-operations_and_infrastructure_management-operations_and_infrastructure_management-order_management",
         "subcategory-operations_and_infrastructure_management-operations_and_infrastructure_management-other",
         "subcategory-operations_and_infrastructure_management-operations_and_infrastructure_management-transportation",
-        "subcategory-operations_and_infrastructure_management-operations_and_infrastructure_management-utilities"
+        "subcategory-operations_and_infrastructure_management-operations_and_infrastructure_management-utilities",
     ],
-    "category-other-other": [
-        "subcategory-other-other"
-    ],
+    "category-other-other": ["subcategory-other-other"],
     "category-samples-samples": [
         "subcategory-samples-samples-biological_samples",
         "subcategory-samples-samples-characterisation",
         "subcategory-samples-samples-chemical_compounds_library",
         "subcategory-samples-samples-other",
-        "subcategory-samples-samples-preparation"
+        "subcategory-samples-samples-preparation",
     ],
     "category-scholarly_communication-scholarly_communication": [
         "subcategory-scholarly_communication-scholarly_communication-analysis",
@@ -254,7 +248,7 @@ categories_and_subcategories_dict = {
         "subcategory-scholarly_communication-scholarly_communication-outreach",
         "subcategory-scholarly_communication-scholarly_communication-preparation",
         "subcategory-scholarly_communication-scholarly_communication-publication",
-        "subcategory-scholarly_communication-scholarly_communication-writing"
+        "subcategory-scholarly_communication-scholarly_communication-writing",
     ],
     "category-security_and_identity-security_and_identity": [
         "subcategory-security_and_identity-security_and_identity-certification_authority",
@@ -266,15 +260,15 @@ categories_and_subcategories_dict = {
         "subcategory-security_and_identity-security_and_identity-single_sign_on",
         "subcategory-security_and_identity-security_and_identity-threat_protection",
         "subcategory-security_and_identity-security_and_identity-tools",
-        "subcategory-security_and_identity-security_and_identity-user_authentication"
+        "subcategory-security_and_identity-security_and_identity-user_authentication",
     ],
     "category-software-software": [
         "subcategory-software-software-libraries",
         "subcategory-software-software-other",
         "subcategory-software-software-platform",
         "subcategory-software-software-software_package",
-        "subcategory-software-software-software_repository"
-    ]
+        "subcategory-software-software-software_repository",
+    ],
 }
 
 target_users_list = [
@@ -294,7 +288,7 @@ target_users_list = [
     "target_user-researchers",
     "target_user-resource_managers",
     "target_user-resource_provider_managers",
-    "target_user-students"
+    "target_user-students",
 ]
 
 access_types_list = [
@@ -302,7 +296,7 @@ access_types_list = [
     "access_type-other",
     "access_type-physical",
     "access_type-remote",
-    "access_type-virtual"
+    "access_type-virtual",
 ]
 
 access_modes_list = [
@@ -310,5 +304,5 @@ access_modes_list = [
     "access_mode-free_conditionally",
     "access_mode-other",
     "access_mode-paid",
-    "access_mode-peer_reviewed"
+    "access_mode-peer_reviewed",
 ]
