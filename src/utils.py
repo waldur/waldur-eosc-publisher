@@ -21,7 +21,7 @@ OFFERING_TOKEN = os.environ.get("OFFERING_TOKEN")
 REFRESH_TOKEN = os.environ.get("REFRESH_TOKEN")
 CLIENT_ID = os.environ.get("CLIENT_ID")
 REFRESH_TOKEN_URL = os.environ.get("REFRESH_TOKEN_URL")
-WALDUR_URL = os.environ.get("WALDUR_URL")
+WALDUR_API_URL = os.environ.get("WALDUR_URL")
 CUSTOMER_UUID = os.environ.get("CUSTOMER_UUID")
 ORGANIZATION_EID = os.environ.get("ORGANIZATION_EID")
 
@@ -31,11 +31,10 @@ OFFER_LIST_URL = "/api/v1/resources/%s/offers"
 OFFER_URL = "/api/v1/resources/%s/offers/%s"
 PROVIDER_SERVICES_URL = "provider/services/%s"
 PROVIDER_URL = "provider/%s"
-WALDUR_API = urllib.parse.urljoin(WALDUR_URL, "api/")
 
 
 def get_waldur_client():
-    waldur_client = WaldurClient(WALDUR_API, WALDUR_TOKEN)
+    waldur_client = WaldurClient(WALDUR_API_URL, WALDUR_TOKEN)
     return waldur_client
 
 
@@ -75,7 +74,7 @@ def offering_request_post_patch(
         "order_type": "order_required",
         "primary_oms_id": 2,
         "oms_params": {},
-        "order_url": WALDUR_URL.replace(
+        "order_url": WALDUR_API_URL.replace(
             "https://api.", "https://"
         ),  # plan['url'],  # "is not a valid URL"
         "internal": internal,
@@ -142,7 +141,7 @@ def create_offer_for_resource(
         "order_type": "order_required",
         "primary_oms_id": 2,
         "oms_params": {},
-        "order_url": WALDUR_URL.replace(
+        "order_url": WALDUR_API_URL.replace(
             "https://api.", "https://"
         ),  # plan['url'],  # "is not a valid URL"
         "internal": internal,
@@ -283,7 +282,7 @@ def create_resource(waldur_resource, provider_contact):
         "name": waldur_resource["name"],
         "resourceOrganisation": ORGANIZATION_EID,  # waldur_offering['customer_name']
         "resourceProviders": [ORGANIZATION_EID],  # waldur_offering['customer_name']
-        "webpage": WALDUR_URL.replace(
+        "webpage": WALDUR_API_URL.replace(
             "https://api.", "https://"
         ),  # waldur_offering['url'] , "https://example.com"
         "description": waldur_resource["description"] or "sample text",
