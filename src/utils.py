@@ -12,6 +12,8 @@ logging.basicConfig(
     format="[%(asctime)s] %(filename)s:%(lineno)d %(levelname)s -%(message)s",
 )
 
+logger = logging.getLogger(__name__)
+
 EOSC_URL = os.environ.get("EOSC_URL")  # polling url
 OFFERING_URL = os.environ.get("OFFERING_URL")
 WALDUR_TOKEN = os.environ.get("WALDUR_TOKEN")
@@ -446,24 +448,31 @@ def process_offers():
     waldur_offerings = get_waldur_offerings()
 
     for waldur_offering in waldur_offerings:
-        provider, created, provider_contact = get_or_create_eosc_provider(
-            waldur_offering["customer"]
-        )
-        if created:
-            logging.info("Provider has been created, pending approval")
-        if provider["is_approved"]:
-            eosc_resource, eosc_resource_created = get_or_create_eosc_resource(
-                waldur_offering, provider_contact
+        try:
+            provider, created, provider_contact = get_or_create_eosc_provider(
+                waldur_offering["customer"]
             )
-            if eosc_resource_created:
-                logging.info("New resource has been created in EOSC", eosc_resource)
-            eosc_resource_offers, offer_created = get_or_create_eosc_resource_offer(
-                eosc_resource, waldur_offering
-            )
-            if offer_created:
-                logging.info("New offering has been created in EOSC", eosc_resource)
+            if created:
+                logging.info("Provider has been created, pending approval")
+            if provider["is_approved"]:
+                eosc_resource, eosc_resource_created = get_or_create_eosc_resource(
+                    waldur_offering, provider_contact
+                )
+                if eosc_resource_created:
+                    logging.info("New resource has been created in EOSC", eosc_resource)
+                eosc_resource_offers, offer_created = get_or_create_eosc_resource_offer(
+                    eosc_resource, waldur_offering
+                )
+                if offer_created:
+                    logging.info("New offering has been created in EOSC", eosc_resource)
 
-            # if not eosc_resource_created and not is_resource_up_to_date(eosc_resource, waldur_resource):
-            #     update_eosc_resource(eosc_resource, waldur_resource)
-            # if not offer_created and not are_offers_up_to_date(eosc_resource_offers, waldur_resource):
-            #     update_eosc_offers(eosc_resource, waldur_resource)
+                # if not eosc_resource_created and not is_resource_up_to_date(eosc_resource, waldur_resource):
+                #     update_eosc_resource(eosc_resource, waldur_resource)
+                # if not offer_created and not are_offers_up_to_date(eosc_resource_offers, waldur_resource):
+                #     update_eosc_offers(eosc_resource, waldur_resource)
+        except Exception as e:
+            logger.error(
+                "The offering %s can not be published due to the following exception: %s",
+                waldur_offering,
+                e,
+            )
