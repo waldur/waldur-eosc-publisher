@@ -9,7 +9,7 @@ from waldur_client import WaldurClient
 logging.getLogger("requests").setLevel(logging.WARNING)
 logging.basicConfig(
     level=logging.INFO,
-    format="[%(asctime)s] %(filename)s:%(lineno)d %(levelname)s -%(message)s",
+    format="[%(asctime)s] %(filename)s:%(lineno)d %(levelname)s - %(message)s",
 )
 
 logger = logging.getLogger(__name__)
