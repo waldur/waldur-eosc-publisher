@@ -471,7 +471,8 @@ def process_offers():
                 #     update_eosc_offers(eosc_resource, waldur_resource)
         except Exception as e:
             logger.exception(
-                "The offering %s can not be published due to the following exception: %s",
-                waldur_offering,
+                "The offering %s (%s) can not be published due to the following exception: %s",
+                waldur_offering["name"],
+                waldur_offering["uuid"],
                 e,
             )
