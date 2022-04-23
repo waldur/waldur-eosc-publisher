@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import sys
 import urllib.parse
 
 import requests
@@ -14,16 +15,27 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-EOSC_URL = os.environ.get("EOSC_URL")  # polling url
-OFFERING_URL = os.environ.get("OFFERING_URL")
-WALDUR_TOKEN = os.environ.get("WALDUR_TOKEN")
-OFFERING_TOKEN = os.environ.get("OFFERING_TOKEN")
-REFRESH_TOKEN = os.environ.get("REFRESH_TOKEN")
-CLIENT_ID = os.environ.get("CLIENT_ID")
-REFRESH_TOKEN_URL = os.environ.get("REFRESH_TOKEN_URL")
-WALDUR_API_URL = os.environ.get("WALDUR_URL")
-CUSTOMER_UUID = os.environ.get("CUSTOMER_UUID")
-ORGANIZATION_EID = os.environ.get("ORGANIZATION_EID")
+
+def get_env_or_fail(env_variable_name):
+    # check that required environment variables is set and exit otherwise
+    value = os.environ.get(env_variable_name)
+    if not value:
+        logger.error(f'Mandatory variable {env_variable_name} is missing or empty.')
+        sys.exit(1)
+    else:
+        return value
+
+
+EOSC_MARKETPLACE_BASE_URL = get_env_or_fail("EOSC_URL")  # TODO: Fix env var name
+EOSC_MARKETPLACE_OFFERING_TOKEN = get_env_or_fail("OFFERING_TOKEN")
+EOSC_PROVIDER_PORTAL_BASE_URL = get_env_or_fail("OFFERING_URL")
+EOSC_AAI_REFRESH_TOKEN = get_env_or_fail("REFRESH_TOKEN")
+EOSC_AAI_CLIENT_ID = get_env_or_fail("CLIENT_ID")
+EOSC_AAI_REFRESH_TOKEN_URL = get_env_or_fail("REFRESH_TOKEN_URL")
+EOSC_PORTAL_ORGANIZATION_EID = get_env_or_fail("ORGANIZATION_EID")
+WALDUR_TOKEN = get_env_or_fail("WALDUR_TOKEN")
+WALDUR_API_URL = get_env_or_fail("WALDUR_URL")
+WALDUR_TARGET_CUSTOMER_UUID = get_env_or_fail("CUSTOMER_UUID")
 
 RESOURCE_LIST_URL = "/api/v1/resources/"
 RESOURCE_URL = "/api/v1/resources/%s/"
@@ -41,12 +53,12 @@ def get_waldur_client():
 def get_provider_token():
     data = {
         "grant_type": "refresh_token",
-        "refresh_token": REFRESH_TOKEN,
-        "client_id": CLIENT_ID,
+        "refresh_token": EOSC_AAI_REFRESH_TOKEN,
+        "client_id": EOSC_AAI_CLIENT_ID,
         "scope": "openid email profile",
     }
 
-    response = requests.post(REFRESH_TOKEN_URL, data=data)
+    response = requests.post(EOSC_AAI_REFRESH_TOKEN_URL, data=data)
     response_data = response.json()
     token = response_data["access_token"]
     return token
@@ -55,7 +67,7 @@ def get_provider_token():
 def resource_and_offering_request():
     headers = {
         "accept": "application/json",
-        "X-User-Token": OFFERING_TOKEN,
+        "X-User-Token": EOSC_MARKETPLACE_OFFERING_TOKEN,
     }
     return headers
 
@@ -66,7 +78,7 @@ def offering_request_post_patch(
     headers = {
         "accept": "application/json",
         "Content-Type": "application/json",
-        "X-User-Token": OFFERING_TOKEN,
+        "X-User-Token": EOSC_MARKETPLACE_OFFERING_TOKEN,
     }
     data = {
         "name": offer_name,
@@ -86,7 +98,7 @@ def offering_request_post_patch(
 def offering_request_delete():
     headers = {
         "accept": "*/*",
-        "X-User-Token": OFFERING_TOKEN,
+        "X-User-Token": EOSC_MARKETPLACE_OFFERING_TOKEN,
     }
     return headers
 
@@ -94,7 +106,7 @@ def offering_request_delete():
 def get_resource_list():
     headers = resource_and_offering_request()
     response = requests.get(
-        urllib.parse.urljoin(EOSC_URL, RESOURCE_LIST_URL), headers=headers
+        urllib.parse.urljoin(EOSC_MARKETPLACE_BASE_URL, RESOURCE_LIST_URL), headers=headers
     )
     resource_list_data = response.json()
     return resource_list_data
@@ -103,7 +115,7 @@ def get_resource_list():
 def get_resource(resource_id):
     headers = resource_and_offering_request()
     response = requests.get(
-        urllib.parse.urljoin(EOSC_URL, RESOURCE_URL % (str(resource_id))),
+        urllib.parse.urljoin(EOSC_MARKETPLACE_BASE_URL, RESOURCE_URL % (str(resource_id))),
         headers=headers,
     )
     resource_data = response.json()
@@ -113,7 +125,7 @@ def get_resource(resource_id):
 def get_offer_list_of_resource(resource_id):
     headers = resource_and_offering_request()
     response = requests.get(
-        urllib.parse.urljoin(EOSC_URL, OFFER_LIST_URL % (str(resource_id))),
+        urllib.parse.urljoin(EOSC_MARKETPLACE_BASE_URL, OFFER_LIST_URL % (str(resource_id))),
         headers=headers,
     )
     if response.status_code == 200:
@@ -133,7 +145,7 @@ def create_offer_for_resource(
     headers = {
         "accept": "application/json",
         "Content-Type": "application/json",
-        "X-User-Token": OFFERING_TOKEN,
+        "X-User-Token": EOSC_MARKETPLACE_OFFERING_TOKEN,
     }
     data = {
         "name": offer_name,
@@ -149,7 +161,7 @@ def create_offer_for_resource(
     }
 
     response = requests.post(
-        urllib.parse.urljoin(EOSC_URL, OFFER_LIST_URL % eosc_resource_id),
+        urllib.parse.urljoin(EOSC_MARKETPLACE_BASE_URL, OFFER_LIST_URL % eosc_resource_id),
         headers=headers,
         data=json.dumps(data),
     )
@@ -170,7 +182,7 @@ def patch_offer_from_resource(
         offer_parameters=offer_parameters,
     )
     response = requests.patch(
-        urllib.parse.urljoin(EOSC_URL, OFFER_URL % (str(resource_id), str(offer_id))),
+        urllib.parse.urljoin(EOSC_MARKETPLACE_BASE_URL, OFFER_URL % (str(resource_id), str(offer_id))),
         headers=headers,
         data=data,
     )
@@ -181,7 +193,7 @@ def patch_offer_from_resource(
 def delete_offer_from_resource(resource_id, offer_id):
     headers = offering_request_delete()
     response = requests.delete(
-        urllib.parse.urljoin(EOSC_URL, OFFER_URL % (str(resource_id), str(offer_id))),
+        urllib.parse.urljoin(EOSC_MARKETPLACE_BASE_URL, OFFER_URL % (str(resource_id), str(offer_id))),
         headers=headers,
     )
     delete_offer_data = response.json()
@@ -278,17 +290,20 @@ def create_resource(waldur_resource, provider_contact):
         "Accept": "application/json",
         "Authorization": get_provider_token(),
     }
+    landing = WALDUR_API_URL.replace(
+            "https://api.", "https://"
+        ).rstrip('/api/') + '/marketplace-public-offering' + waldur_resource["uuid"] + '/'
     data = {
         "name": waldur_resource["name"],
-        "resourceOrganisation": ORGANIZATION_EID,  # waldur_offering['customer_name']
-        "resourceProviders": [ORGANIZATION_EID],  # waldur_offering['customer_name']
-        "webpage": WALDUR_API_URL.replace(
-            "https://api.", "https://"
-        ),  # waldur_offering['url'] , "https://example.com"
+        "abbreviation": waldur_resource["name"],
+        "resourceOrganisation": EOSC_PORTAL_ORGANIZATION_EID,  # waldur_offering['customer_name']
+        "resourceProviders": [EOSC_PORTAL_ORGANIZATION_EID],  # waldur_offering['customer_name']
+        "webpage": landing,
         "description": waldur_resource["description"] or "sample text",
         "tagline": waldur_resource["name"].lower(),
         "logo": waldur_resource["thumbnail"] or "https://etais.ee/images/logo.png",
-        # ???
+        "termsOfUse": landing,
+        "privacyPolicy": landing,
         "scientificDomains": [
             {
                 "scientificDomain": "scientific_domain-agricultural_sciences",
@@ -330,24 +345,26 @@ def create_resource(waldur_resource, provider_contact):
         "securityContactEmail": waldur_resource["attributes"]["vpc_Support_email"]
         if len(waldur_resource["attributes"]) > 0
         else "etais@etais.ee",
-        "trl": "trl-1",
+        "trl": "trl-9",
         "orderType": "order_type-order_required",
     }
     response = requests.post(
-        urllib.parse.urljoin(OFFERING_URL, "resource/"),
+        urllib.parse.urljoin(EOSC_PROVIDER_PORTAL_BASE_URL, "resource/"),
         headers=headers,
         data=json.dumps(data),
     )
-    if response.status_code == 409:
+    if response.status_code not in [200, 201]:
         logging.error(f"Error: {response.text}")
+        logging.error('Error creating resource in Marketplace: %s', response.status_code)
+        sys.exit(1)
     r = response.json()
-    return r, response.status_code
+    return r
 
 
 def get_resource_by_id(resource_id):
     headers = {"Accept": "application/json"}
     response = requests.get(
-        urllib.parse.urljoin(OFFERING_URL, f"resource/{resource_id}"), headers=headers
+        urllib.parse.urljoin(EOSC_PROVIDER_PORTAL_BASE_URL, f"resource/{resource_id}"), headers=headers
     )
     data = response.json()
     return data
@@ -356,7 +373,7 @@ def get_resource_by_id(resource_id):
 def get_all_resources_from_provider():
     headers = {"Accept": "application/json"}
     response = requests.get(
-        urllib.parse.urljoin(OFFERING_URL, PROVIDER_SERVICES_URL % ORGANIZATION_EID),
+        urllib.parse.urljoin(EOSC_PROVIDER_PORTAL_BASE_URL, PROVIDER_SERVICES_URL % EOSC_PORTAL_ORGANIZATION_EID),
         # 'provider/services/tnp'
         headers=headers,
     )
@@ -369,10 +386,10 @@ def get_all_resources_from_provider():
 def get_all_offers_from_resource(eosc_resource_id):
     headers = {
         "accept": "application/json",
-        "X-User-Token": OFFERING_TOKEN,
+        "X-User-Token": EOSC_MARKETPLACE_OFFERING_TOKEN,
     }
     response = requests.get(
-        urllib.parse.urljoin(EOSC_URL, OFFER_LIST_URL % (str(eosc_resource_id))),
+        urllib.parse.urljoin(EOSC_MARKETPLACE_BASE_URL, OFFER_LIST_URL % (str(eosc_resource_id))),
         headers=headers,
     )
     data = response.json()
@@ -393,9 +410,7 @@ def get_or_create_eosc_resource(
         logging.info(f'Resource is already in EOSC: {existing_resource["name"]}')
         return existing_resource, False
     else:
-        resource, status_code = create_resource(waldur_offering, provider_contact)
-        if status_code == 409:
-            return resource, False
+        resource = create_resource(waldur_offering, provider_contact)
         return resource, True
 
 
@@ -423,13 +438,13 @@ def get_or_create_eosc_provider(customer=None):  # only get atm
         }
         # tnp - test nordic provider
         response = requests.get(
-            urllib.parse.urljoin(OFFERING_URL, PROVIDER_URL % ORGANIZATION_EID),
+            urllib.parse.urljoin(EOSC_PROVIDER_PORTAL_BASE_URL, PROVIDER_URL % EOSC_PORTAL_ORGANIZATION_EID),
             headers=headers,
         )
         provider = response.json()
         provider_contact = provider["users"][-1]
     except ValueError:
-        return provider, False
+        return provider, False, None
     else:
         logging.info(f'Existing provider name: {provider["name"]}')
         provider["is_approved"] = True
@@ -438,7 +453,7 @@ def get_or_create_eosc_provider(customer=None):  # only get atm
 
 def get_waldur_offerings():
     list_resources = get_waldur_client().list_marketplace_offerings(
-        {"customer_uuid": CUSTOMER_UUID}
+        {"customer_uuid": WALDUR_TARGET_CUSTOMER_UUID}
     )
     return list_resources
 

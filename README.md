@@ -4,9 +4,9 @@
 
 ### utils_offers.py
 
-- `EOSC_URL` - EOSC Marketplace url to poll events from
+- `EOSC_URL` - EOSC Marketplace base url
 - `OFFERING_URL` - EOSC Marketplace Offering API url
-- `WALDUR_TOKEN` - ETAIS token
+- `WALDUR_TOKEN` - Waldur token
 - `OFFERING_TOKEN` - EOSC Marketplace Offering API token
 - `REFRESH_TOKEN` - EOSC Portal Provider API refresh token to get access token
 - `CLIENT_ID` - client id to get access token
