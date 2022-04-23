@@ -17,7 +17,7 @@ def sync_offers():
         try:
             utils.process_offers()
         except Exception as e:
-            logger.error(
+            logger.exception(
                 "The application crashed due to the following exception: %s", e
             )
         sleep(60)

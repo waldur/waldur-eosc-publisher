@@ -470,7 +470,7 @@ def process_offers():
                 # if not offer_created and not are_offers_up_to_date(eosc_resource_offers, waldur_resource):
                 #     update_eosc_offers(eosc_resource, waldur_resource)
         except Exception as e:
-            logger.error(
+            logger.exception(
                 "The offering %s can not be published due to the following exception: %s",
                 waldur_offering,
                 e,
