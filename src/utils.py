@@ -392,6 +392,8 @@ def get_all_offers_from_resource(eosc_resource_id):
         urllib.parse.urljoin(EOSC_MARKETPLACE_BASE_URL, OFFER_LIST_URL % (str(eosc_resource_id))),
         headers=headers,
     )
+    if response.status_code == 404:
+        raise Exception(f'Could not find offers for resource with ID {eosc_resource_id}')
     data = response.json()
     data = data["offers"]
     offers_names = [item["name"] for item in data]
