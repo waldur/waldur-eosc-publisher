@@ -20,7 +20,7 @@ def get_env_or_fail(env_variable_name):
     # check that required environment variables is set and exit otherwise
     value = os.environ.get(env_variable_name)
     if not value:
-        logger.error(f'Mandatory variable {env_variable_name} is missing or empty.')
+        logger.error(f"Mandatory variable {env_variable_name} is missing or empty.")
         sys.exit(1)
     else:
         return value
@@ -106,7 +106,8 @@ def offering_request_delete():
 def get_resource_list():
     headers = resource_and_offering_request()
     response = requests.get(
-        urllib.parse.urljoin(EOSC_MARKETPLACE_BASE_URL, RESOURCE_LIST_URL), headers=headers
+        urllib.parse.urljoin(EOSC_MARKETPLACE_BASE_URL, RESOURCE_LIST_URL),
+        headers=headers,
     )
     resource_list_data = response.json()
     return resource_list_data
@@ -115,7 +116,9 @@ def get_resource_list():
 def get_resource(resource_id):
     headers = resource_and_offering_request()
     response = requests.get(
-        urllib.parse.urljoin(EOSC_MARKETPLACE_BASE_URL, RESOURCE_URL % (str(resource_id))),
+        urllib.parse.urljoin(
+            EOSC_MARKETPLACE_BASE_URL, RESOURCE_URL % (str(resource_id))
+        ),
         headers=headers,
     )
     resource_data = response.json()
@@ -125,7 +128,9 @@ def get_resource(resource_id):
 def get_offer_list_of_resource(resource_id):
     headers = resource_and_offering_request()
     response = requests.get(
-        urllib.parse.urljoin(EOSC_MARKETPLACE_BASE_URL, OFFER_LIST_URL % (str(resource_id))),
+        urllib.parse.urljoin(
+            EOSC_MARKETPLACE_BASE_URL, OFFER_LIST_URL % (str(resource_id))
+        ),
         headers=headers,
     )
     if response.status_code == 200:
@@ -161,7 +166,9 @@ def create_offer_for_resource(
     }
 
     response = requests.post(
-        urllib.parse.urljoin(EOSC_MARKETPLACE_BASE_URL, OFFER_LIST_URL % eosc_resource_id),
+        urllib.parse.urljoin(
+            EOSC_MARKETPLACE_BASE_URL, OFFER_LIST_URL % eosc_resource_id
+        ),
         headers=headers,
         data=json.dumps(data),
     )
@@ -182,7 +189,9 @@ def patch_offer_from_resource(
         offer_parameters=offer_parameters,
     )
     response = requests.patch(
-        urllib.parse.urljoin(EOSC_MARKETPLACE_BASE_URL, OFFER_URL % (str(resource_id), str(offer_id))),
+        urllib.parse.urljoin(
+            EOSC_MARKETPLACE_BASE_URL, OFFER_URL % (str(resource_id), str(offer_id))
+        ),
         headers=headers,
         data=data,
     )
@@ -193,7 +202,9 @@ def patch_offer_from_resource(
 def delete_offer_from_resource(resource_id, offer_id):
     headers = offering_request_delete()
     response = requests.delete(
-        urllib.parse.urljoin(EOSC_MARKETPLACE_BASE_URL, OFFER_URL % (str(resource_id), str(offer_id))),
+        urllib.parse.urljoin(
+            EOSC_MARKETPLACE_BASE_URL, OFFER_URL % (str(resource_id), str(offer_id))
+        ),
         headers=headers,
     )
     delete_offer_data = response.json()
@@ -290,14 +301,19 @@ def create_resource(waldur_resource, provider_contact):
         "Accept": "application/json",
         "Authorization": get_provider_token(),
     }
-    landing = WALDUR_API_URL.replace(
-            "https://api.", "https://"
-        ).rstrip('/api/') + '/marketplace-public-offering' + waldur_resource["uuid"] + '/'
+    landing = (
+        WALDUR_API_URL.replace("https://api.", "https://").rstrip("/api/")
+        + "/marketplace-public-offering"
+        + waldur_resource["uuid"]
+        + "/"
+    )
     data = {
         "name": waldur_resource["name"],
         "abbreviation": waldur_resource["name"],
         "resourceOrganisation": EOSC_PORTAL_ORGANIZATION_EID,  # waldur_offering['customer_name']
-        "resourceProviders": [EOSC_PORTAL_ORGANIZATION_EID],  # waldur_offering['customer_name']
+        "resourceProviders": [
+            EOSC_PORTAL_ORGANIZATION_EID
+        ],  # waldur_offering['customer_name']
         "webpage": landing,
         "description": waldur_resource["description"] or "sample text",
         "tagline": waldur_resource["name"].lower(),
@@ -355,7 +371,9 @@ def create_resource(waldur_resource, provider_contact):
     )
     if response.status_code not in [200, 201]:
         logging.error(f"Error: {response.text}")
-        logging.error('Error creating resource in Marketplace: %s', response.status_code)
+        logging.error(
+            "Error creating resource in Marketplace: %s", response.status_code
+        )
         sys.exit(1)
     r = response.json()
     return r
@@ -364,7 +382,8 @@ def create_resource(waldur_resource, provider_contact):
 def get_resource_by_id(resource_id):
     headers = {"Accept": "application/json"}
     response = requests.get(
-        urllib.parse.urljoin(EOSC_PROVIDER_PORTAL_BASE_URL, f"resource/{resource_id}"), headers=headers
+        urllib.parse.urljoin(EOSC_PROVIDER_PORTAL_BASE_URL, f"resource/{resource_id}"),
+        headers=headers,
     )
     data = response.json()
     return data
@@ -373,7 +392,10 @@ def get_resource_by_id(resource_id):
 def get_all_resources_from_provider():
     headers = {"Accept": "application/json"}
     response = requests.get(
-        urllib.parse.urljoin(EOSC_PROVIDER_PORTAL_BASE_URL, PROVIDER_SERVICES_URL % EOSC_PORTAL_ORGANIZATION_EID),
+        urllib.parse.urljoin(
+            EOSC_PROVIDER_PORTAL_BASE_URL,
+            PROVIDER_SERVICES_URL % EOSC_PORTAL_ORGANIZATION_EID,
+        ),
         # 'provider/services/tnp'
         headers=headers,
     )
@@ -389,11 +411,15 @@ def get_all_offers_from_resource(eosc_resource_id):
         "X-User-Token": EOSC_MARKETPLACE_OFFERING_TOKEN,
     }
     response = requests.get(
-        urllib.parse.urljoin(EOSC_MARKETPLACE_BASE_URL, OFFER_LIST_URL % (str(eosc_resource_id))),
+        urllib.parse.urljoin(
+            EOSC_MARKETPLACE_BASE_URL, OFFER_LIST_URL % (str(eosc_resource_id))
+        ),
         headers=headers,
     )
     if response.status_code == 404:
-        raise Exception(f'Could not find offers for resource with ID {eosc_resource_id}')
+        raise Exception(
+            f"Could not find offers for resource with ID {eosc_resource_id}"
+        )
     data = response.json()
     data = data["offers"]
     offers_names = [item["name"] for item in data]
@@ -440,7 +466,10 @@ def get_or_create_eosc_provider(customer=None):  # only get atm
         }
         # tnp - test nordic provider
         response = requests.get(
-            urllib.parse.urljoin(EOSC_PROVIDER_PORTAL_BASE_URL, PROVIDER_URL % EOSC_PORTAL_ORGANIZATION_EID),
+            urllib.parse.urljoin(
+                EOSC_PROVIDER_PORTAL_BASE_URL,
+                PROVIDER_URL % EOSC_PORTAL_ORGANIZATION_EID,
+            ),
             headers=headers,
         )
         provider = response.json()
