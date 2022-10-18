@@ -36,13 +36,15 @@ EOSC_PORTAL_ORGANIZATION_EID = get_env_or_fail("ORGANIZATION_EID")
 WALDUR_TOKEN = get_env_or_fail("WALDUR_TOKEN")
 WALDUR_API_URL = get_env_or_fail("WALDUR_URL")
 WALDUR_TARGET_CUSTOMER_UUID = get_env_or_fail("CUSTOMER_UUID")
+CATALOGUE_ID = get_env_or_fail("CATALOGUE_ID")
 
+CATALOGUE_PREFIX = f"/catalogue/{CATALOGUE_ID}/"
 RESOURCE_LIST_URL = "/api/v1/resources/"
 RESOURCE_URL = "/api/v1/resources/%s/"
 OFFER_LIST_URL = "/api/v1/resources/%s/offers"
 OFFER_URL = "/api/v1/resources/%s/offers/%s"
-PROVIDER_SERVICES_URL = "provider/services/%s"
-PROVIDER_URL = "provider/%s"
+PROVIDER_SERVICES_URL = CATALOGUE_PREFIX + "%s/resource/all "
+PROVIDER_URL = CATALOGUE_PREFIX + "provider/%s"
 
 
 def get_waldur_client():
@@ -220,10 +222,10 @@ def _normalize_limits(limit, limit_type):
     return limit
 
 
-def sync_offer(eosc_resource_id, waldur_resource):
+def sync_offer(eosc_resource_id, waldur_offering):
     eosc_offers = get_offer_list_of_resource(eosc_resource_id)["offers"]
     eosc_offers_names = {offer["name"] for offer in eosc_offers}
-    for plan in waldur_resource["plans"]:
+    for plan in waldur_offering["plans"]:
         if plan["name"] in eosc_offers_names:
             logging.info(
                 f"Skipping creation of plan {plan['name']}. Offer with the same name already exists."
@@ -240,7 +242,7 @@ def sync_offer(eosc_resource_id, waldur_resource):
                 "unit": "",
             }
         ]
-        for component in waldur_resource["components"]:
+        for component in waldur_offering["components"]:
             if component["billing_type"] == "limit":
                 parameters.append(
                     {
@@ -270,7 +272,7 @@ def sync_offer(eosc_resource_id, waldur_resource):
                         "label": component["name"],
                         "description": component["description"]
                         or f"Amount of {component['name']} in "
-                        f"{waldur_resource['name']}.",
+                        f"{waldur_offering['name']}.",
                         "type": "range",
                         "value_type": "integer",  # waldur only expects numeric values for limit-type components
                         "unit": component["measured_unit"],
@@ -295,7 +297,7 @@ def sync_offer(eosc_resource_id, waldur_resource):
         )
 
 
-def create_resource(waldur_resource, provider_contact):
+def create_resource(waldur_offering, provider_contact):
     headers = {
         "Content-Type": "application/json",
         "Accept": "application/json",
@@ -304,20 +306,20 @@ def create_resource(waldur_resource, provider_contact):
     landing = (
         WALDUR_API_URL.replace("https://api.", "https://").rstrip("/api/")
         + "/marketplace-public-offering"
-        + waldur_resource["uuid"]
+        + waldur_offering["uuid"]
         + "/"
     )
     data = {
-        "name": waldur_resource["name"],
-        "abbreviation": waldur_resource["name"],
+        "name": waldur_offering["name"],
+        "abbreviation": waldur_offering["name"],
         "resourceOrganisation": EOSC_PORTAL_ORGANIZATION_EID,  # waldur_offering['customer_name']
         "resourceProviders": [
             EOSC_PORTAL_ORGANIZATION_EID
         ],  # waldur_offering['customer_name']
         "webpage": landing,
-        "description": waldur_resource["description"] or "sample text",
-        "tagline": waldur_resource["name"].lower(),
-        "logo": waldur_resource["thumbnail"] or "https://etais.ee/images/logo.png",
+        "description": waldur_offering["description"] or "sample text",
+        "tagline": waldur_offering["name"].lower(),
+        "logo": waldur_offering["thumbnail"] or "https://etais.ee/images/logo.png",
         "termsOfUse": landing,
         "privacyPolicy": landing,
         "scientificDomains": [
@@ -350,16 +352,16 @@ def create_resource(waldur_resource, provider_contact):
         },
         "publicContacts": [
             {
-                "email": waldur_resource["attributes"]["vpc_Support_email"]
-                if len(waldur_resource["attributes"]) > 0
+                "email": waldur_offering["attributes"]["vpc_Support_email"]
+                if len(waldur_offering["attributes"]) > 0
                 else "etais@etais.ee",
             }
         ],
-        "helpdeskEmail": waldur_resource["attributes"]["vpc_Support_email"]
-        if len(waldur_resource["attributes"]) > 0
+        "helpdeskEmail": waldur_offering["attributes"]["vpc_Support_email"]
+        if len(waldur_offering["attributes"]) > 0
         else "etais@etais.ee",
-        "securityContactEmail": waldur_resource["attributes"]["vpc_Support_email"]
-        if len(waldur_resource["attributes"]) > 0
+        "securityContactEmail": waldur_offering["attributes"]["vpc_Support_email"]
+        if len(waldur_offering["attributes"]) > 0
         else "etais@etais.ee",
         "trl": "trl-9",
         "orderType": "order_type-order_required",
@@ -443,28 +445,27 @@ def get_or_create_eosc_resource(
 
 
 def get_or_create_eosc_resource_offer(
-    eosc_resource, waldur_resource
+    eosc_resource, waldur_offering
 ):  # , eosc_marketplace=None
     offers_names, offers_ids = get_all_offers_from_resource(
         eosc_resource_id=eosc_resource["id"]
     )
     offer = sync_offer(
-        eosc_resource_id=eosc_resource["id"], waldur_resource=waldur_resource
+        eosc_resource_id=eosc_resource["id"], waldur_offering=waldur_offering
     )
-    if waldur_resource["name"] in offers_names:
+    if waldur_offering["name"] in offers_names:
         return offer, True
     else:
         return offer, False
 
 
-def get_or_create_eosc_provider(customer=None):  # only get atm
+def get_or_create_eosc_provider(waldur_customer_uuid):
     provider = {}
     try:
         headers = {
             "Accept": "application/json",
             "Authorization": get_provider_token(),
         }
-        # tnp - test nordic provider
         response = requests.get(
             urllib.parse.urljoin(
                 EOSC_PROVIDER_PORTAL_BASE_URL,
@@ -474,6 +475,7 @@ def get_or_create_eosc_provider(customer=None):  # only get atm
         )
         provider = response.json()
         provider_contact = provider["users"][-1]
+        # TODO: add creation of a provider
     except ValueError:
         return provider, False, None
     else:
@@ -489,28 +491,51 @@ def get_waldur_offerings():
     return list_resources
 
 
+def create_offer_for_waldur_offering(waldur_offering, provider_contact):
+    eosc_resource, eosc_resource_created = get_or_create_eosc_resource(
+        waldur_offering, provider_contact
+    )
+    if eosc_resource_created:
+        logging.info("New resource has been created in EOSC", eosc_resource)
+    eosc_resource_offers, offer_created = get_or_create_eosc_resource_offer(
+        eosc_resource, waldur_offering
+    )
+    if offer_created:
+        logging.info("New offering has been created in EOSC", eosc_resource)
+    else:
+        pass
+        # TODO: add activation of an offer
+
+
+def deactivate_offer(waldur_offering):
+    # TODO: implement deactivation of an offer
+    pass
+
+
 def process_offers():
     waldur_offerings = get_waldur_offerings()
 
     for waldur_offering in waldur_offerings:
+        if waldur_offering["attributes"] is None or waldur_offering["attributes"].get(
+            "enable_sync_to_eosc"
+        ):
+            logger.info(
+                "The offering %s is not enabled for sync to EOSC, skipping it",
+                waldur_offering["name"],
+            )
+            continue
+
         try:
             provider, created, provider_contact = get_or_create_eosc_provider(
-                waldur_offering["customer"]
+                waldur_offering["customer_uuid"]
             )
             if created:
                 logging.info("Provider has been created, pending approval")
             if provider["is_approved"]:
-                eosc_resource, eosc_resource_created = get_or_create_eosc_resource(
-                    waldur_offering, provider_contact
-                )
-                if eosc_resource_created:
-                    logging.info("New resource has been created in EOSC", eosc_resource)
-                eosc_resource_offers, offer_created = get_or_create_eosc_resource_offer(
-                    eosc_resource, waldur_offering
-                )
-                if offer_created:
-                    logging.info("New offering has been created in EOSC", eosc_resource)
-
+                if waldur_offering["state"] in ["Active", "Paused"]:
+                    create_offer_for_waldur_offering(waldur_offering, provider_contact)
+                elif waldur_offering["state"] in ["Archived", "Draft"]:
+                    deactivate_offer(waldur_offering)
                 # if not eosc_resource_created and not is_resource_up_to_date(eosc_resource, waldur_resource):
                 #     update_eosc_resource(eosc_resource, waldur_resource)
                 # if not offer_created and not are_offers_up_to_date(eosc_resource_offers, waldur_resource):

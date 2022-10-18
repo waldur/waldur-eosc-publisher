@@ -1,0 +1,53 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: waldur-eosc-publisher
+spec:
+  selector:
+    matchLabels:
+      app: eosc-publisher
+  template:
+    metadata:
+      labels:
+        app: eosc-publisher
+    spec:
+      containers:
+        - name: waldur-eosc-publisher
+          image: registry.hpc.ut.ee/mirror/opennode/waldur-eosc-publisher:latest
+          imagePullPolicy: Always
+          # TODO
+          # livenessProbe:
+          # readinessProbe:
+          env:
+          - name: EOSC_URL
+            value: "https://marketplace-3.docker-fid.grid.cyf-kr.edu.pl/"
+          - name: OFFERING_URL
+            value: "https://beta.providers.eosc-portal.eu/api/"
+          - name: WALDUR_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: waldur-eosc-secret
+                key: waldurToken
+          - name: OFFERING_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: waldur-eosc-secret
+                key: offeringToken
+          - name: REFRESH_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: waldur-eosc-secret
+                key: refreshToken
+          - name: CLIENT_ID
+            value: "<CLIENT_ID>"
+          - name: REFRESH_TOKEN_URL
+            value: "https://aai.eosc-portal.eu/oidc/token"
+          - name: WALDUR_URL
+            value: http://waldur-mastermind-api:8080/api/
+          - name: CUSTOMER_UUID
+            value: "<CUSTOMER_UUID>"
+          - name: ORGANIZATION_EID
+            value: "tnp"
+          - name: CATALOGUE_ID
+            value: "eosc-nordic"
