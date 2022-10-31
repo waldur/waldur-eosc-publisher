@@ -38,7 +38,7 @@ WALDUR_API_URL = get_env_or_fail("WALDUR_URL")
 WALDUR_TARGET_CUSTOMER_UUID = get_env_or_fail("CUSTOMER_UUID")
 CATALOGUE_ID = get_env_or_fail("CATALOGUE_ID")
 
-CATALOGUE_PREFIX = f"/catalogue/{CATALOGUE_ID}/"
+CATALOGUE_PREFIX = f"/api/catalogue/{CATALOGUE_ID}/"
 RESOURCE_LIST_URL = "/api/v1/resources/"
 RESOURCE_URL = "/api/v1/resources/%s/"
 OFFER_LIST_URL = "/api/v1/resources/%s/offers"
@@ -516,8 +516,9 @@ def process_offers():
     waldur_offerings = get_waldur_offerings()
 
     for waldur_offering in waldur_offerings:
-        if waldur_offering["attributes"] is None or waldur_offering["attributes"].get(
-            "enable_sync_to_eosc"
+        if (
+            waldur_offering["attributes"] is None
+            or waldur_offering["attributes"].get("enable_sync_to_eosc") is not True
         ):
             logger.info(
                 "The offering %s is not enabled for sync to EOSC, skipping it",
