@@ -5,6 +5,7 @@ import sys
 import urllib.parse
 
 import requests
+from requests.status_codes import codes as http_codes
 from waldur_client import WaldurClient
 
 logging.getLogger("requests").setLevel(logging.WARNING)
@@ -45,11 +46,7 @@ OFFER_LIST_URL = "/api/v1/resources/%s/offers"
 OFFER_URL = "/api/v1/resources/%s/offers/%s"
 PROVIDER_SERVICES_URL = CATALOGUE_PREFIX + "%s/resource/all "
 PROVIDER_URL = CATALOGUE_PREFIX + "provider/%s"
-
-
-def get_waldur_client():
-    waldur_client = WaldurClient(WALDUR_API_URL, WALDUR_TOKEN)
-    return waldur_client
+waldur_client = WaldurClient(WALDUR_API_URL, WALDUR_TOKEN)
 
 
 def get_provider_token():
@@ -418,7 +415,7 @@ def get_all_offers_from_resource(eosc_resource_id):
         ),
         headers=headers,
     )
-    if response.status_code == 404:
+    if response.status_code == http_codes.NOT_FOUND:
         raise Exception(
             f"Could not find offers for resource with ID {eosc_resource_id}"
         )
@@ -473,22 +470,19 @@ def get_or_create_eosc_provider(waldur_customer_uuid):
             ),
             headers=headers,
         )
+
+        if response.status_code == http_codes.NOT_FOUND:
+            # TODO: add creation of a provider
+            pass
+
         provider = response.json()
         provider_contact = provider["users"][-1]
-        # TODO: add creation of a provider
     except ValueError:
         return provider, False, None
     else:
         logging.info(f'Existing provider name: {provider["name"]}')
         provider["is_approved"] = True
         return provider, False, provider_contact
-
-
-def get_waldur_offerings():
-    list_resources = get_waldur_client().list_marketplace_offerings(
-        {"customer_uuid": WALDUR_TARGET_CUSTOMER_UUID}
-    )
-    return list_resources
 
 
 def create_offer_for_waldur_offering(waldur_offering, provider_contact):
@@ -513,19 +507,14 @@ def deactivate_offer(waldur_offering):
 
 
 def process_offers():
-    waldur_offerings = get_waldur_offerings()
+    waldur_offerings = waldur_client.list_marketplace_offerings(
+        {
+            "customer_uuid": WALDUR_TARGET_CUSTOMER_UUID,
+            "attributes": '{"enable_sync_to_eosc":true}',
+        },
+    )
 
     for waldur_offering in waldur_offerings:
-        if (
-            waldur_offering["attributes"] is None
-            or waldur_offering["attributes"].get("enable_sync_to_eosc") is not True
-        ):
-            logger.info(
-                "The offering %s is not enabled for sync to EOSC, skipping it",
-                waldur_offering["name"],
-            )
-            continue
-
         try:
             provider, created, provider_contact = get_or_create_eosc_provider(
                 waldur_offering["customer_uuid"]
