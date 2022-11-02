@@ -48,5 +48,5 @@ spec:
             value: "<CUSTOMER_UUID>"
           - name: ORGANIZATION_EID
             value: "tnp"
-          - name: CATALOGUE_ID
+          - name: EOSC_CATALOGUE_ID
             value: "eosc-nordic"

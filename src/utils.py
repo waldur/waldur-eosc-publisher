@@ -34,18 +34,18 @@ EOSC_AAI_REFRESH_TOKEN = get_env_or_fail("REFRESH_TOKEN")
 EOSC_AAI_CLIENT_ID = get_env_or_fail("CLIENT_ID")
 EOSC_AAI_REFRESH_TOKEN_URL = get_env_or_fail("REFRESH_TOKEN_URL")
 EOSC_PORTAL_ORGANIZATION_EID = get_env_or_fail("ORGANIZATION_EID")
+EOSC_CATALOGUE_ID = get_env_or_fail("EOSC_CATALOGUE_ID")
 WALDUR_TOKEN = get_env_or_fail("WALDUR_TOKEN")
 WALDUR_API_URL = get_env_or_fail("WALDUR_URL")
 WALDUR_TARGET_CUSTOMER_UUID = get_env_or_fail("CUSTOMER_UUID")
-CATALOGUE_ID = get_env_or_fail("CATALOGUE_ID")
 
-CATALOGUE_PREFIX = f"/api/catalogue/{CATALOGUE_ID}/"
+CATALOGUE_PREFIX = f"/api/catalogue/{EOSC_CATALOGUE_ID}/"
 RESOURCE_LIST_URL = "/api/v1/resources/"
 RESOURCE_URL = "/api/v1/resources/%s/"
-OFFER_LIST_URL = "/api/v1/resources/%s/offers"
+OFFER_LIST_URL = "/api/v1/resources/%s/offers/"
 OFFER_URL = "/api/v1/resources/%s/offers/%s"
 PROVIDER_SERVICES_URL = CATALOGUE_PREFIX + "%s/resource/all "
-PROVIDER_URL = CATALOGUE_PREFIX + "provider/%s"
+PROVIDER_URL = CATALOGUE_PREFIX + "provider/"
 waldur_client = WaldurClient(WALDUR_API_URL, WALDUR_TOKEN)
 
 
@@ -434,7 +434,7 @@ def get_or_create_eosc_resource(
         existing_resource = get_resource_by_id(
             resource_ids[resource_names.index(waldur_offering["name"])]
         )
-        logging.info(f'Resource is already in EOSC: {existing_resource["name"]}')
+        logging.info("Resource is already in EOSC: %s", existing_resource["name"])
         return existing_resource, False
     else:
         resource = create_resource(waldur_offering, provider_contact)
@@ -456,33 +456,118 @@ def get_or_create_eosc_resource_offer(
         return offer, False
 
 
-def get_or_create_eosc_provider(waldur_customer_uuid):
-    provider = {}
-    try:
-        headers = {
-            "Accept": "application/json",
-            "Authorization": get_provider_token(),
-        }
-        response = requests.get(
-            urllib.parse.urljoin(
-                EOSC_PROVIDER_PORTAL_BASE_URL,
-                PROVIDER_URL % EOSC_PORTAL_ORGANIZATION_EID,
-            ),
-            headers=headers,
+def create_eosc_provider():
+    waldur_customer = waldur_client._get_resource(
+        waldur_client.Endpoints.Customers, WALDUR_TARGET_CUSTOMER_UUID
+    )
+
+    if waldur_customer["image"]:
+        logo_url = waldur_customer["homepage"]
+    else:
+        configuration = waldur_client.get_configuration()
+        homeport_url = configuration["WALDUR_CORE"]["HOMEPORT_URL"]
+        logo_url = urllib.parse.urljoin(
+            homeport_url,
+            "images/login_logo.png",
         )
 
-        if response.status_code == http_codes.NOT_FOUND:
-            # TODO: add creation of a provider
-            pass
+    [city, address] = waldur_customer["address"].split(maxsplit=1)
 
-        provider = response.json()
-        provider_contact = provider["users"][-1]
-    except ValueError:
-        return provider, False, None
+    service_provider = waldur_client.list_service_providers(
+        filters={"customer_uuid": WALDUR_TARGET_CUSTOMER_UUID}
+    )[0]
+    description = (
+        service_provider["description"]
+        or "%s provider in EOSC marketplace" % waldur_customer["name"]
+    )
+    provider_payload = {
+        "abbreviation": waldur_customer["abbreviation"],
+        "name": waldur_customer["name"],
+        "website": waldur_customer["homepage"],
+        "legalEntity": False,
+        "description": description,
+        "logo": logo_url,
+        "location": {
+            "streetNameAndNumber": address,
+            "postalCode": waldur_customer["postal"],
+            "city": city,
+            "country": waldur_customer["country"],
+        },
+        "participatingCountries": [waldur_customer["country"]],
+        "catalogueId": EOSC_CATALOGUE_ID,
+        "users": [],
+    }
+
+    first_owner = waldur_customer["owners"][0]
+    [first_name, last_name] = first_owner["full_name"].split(maxsplit=1)
+    provider_payload["mainContact"] = {
+        "firstName": first_name,
+        "lastName": last_name,
+        "email": first_owner["email"],
+        "phone": waldur_customer["phone_number"],
+    }
+    provider_payload["publicContacts"] = [
+        {"email": waldur_customer["email"] or first_owner["email"]}
+    ]
+
+    if waldur_customer["domain"]:
+        provider_payload["scientificDomains"] = [
+            {
+                "scientificDomain": waldur_customer["domain"],
+                "scientificSubdomain": waldur_customer["domain"],
+            }
+        ]
+
+    if waldur_customer["division"]:
+        provider_payload["affiliations"] = [waldur_customer["division"]]
+
+    provider_url = urllib.parse.urljoin(
+        EOSC_PROVIDER_PORTAL_BASE_URL,
+        PROVIDER_URL,
+    )
+    provider_response = requests.post(
+        provider_url,
+        data=provider_payload,
+    )
+
+    if provider_response.status_code not in [http_codes.OK, http_codes.CREATED]:
+        logger.error(
+            "Unable to create a new provider. Code %s, error: %s",
+            (provider_response.status_code, provider_response.text),
+        )
+        return
+
+    return provider_response.json()
+
+
+def get_or_create_eosc_provider():
+    headers = {
+        "Accept": "application/json",
+        "Authorization": get_provider_token(),
+    }
+    provider_url = urllib.parse.urljoin(
+        EOSC_PROVIDER_PORTAL_BASE_URL,
+        f"{PROVIDER_URL}/{EOSC_PORTAL_ORGANIZATION_EID}",
+    )
+    provider_response = requests.get(
+        provider_url,
+        headers=headers,
+    )
+
+    if provider_response.status_code == http_codes.NOT_FOUND:
+        provider_json = create_eosc_provider()
+        return provider_json, provider_json is not None
+    elif provider_response.status_code == http_codes.OK:
+        provider_json = provider_response.json()
+        logging.info("Existing provider name: %s", provider_json["name"])
+        provider_json["is_approved"] = True
+        return provider_json, False
     else:
-        logging.info(f'Existing provider name: {provider["name"]}')
-        provider["is_approved"] = True
-        return provider, False, provider_contact
+        logger.error(
+            "Unable to get a provider. Code %s, error: %",
+            (provider_response.status_code, provider_response.text),
+        )
+        return None, False
 
 
 def create_offer_for_waldur_offering(waldur_offering, provider_contact):
@@ -516,13 +601,14 @@ def process_offers():
 
     for waldur_offering in waldur_offerings:
         try:
-            provider, created, provider_contact = get_or_create_eosc_provider(
+            provider, created = get_or_create_eosc_provider(
                 waldur_offering["customer_uuid"]
             )
             if created:
                 logging.info("Provider has been created, pending approval")
-            if provider["is_approved"]:
+            elif provider["is_approved"]:
                 if waldur_offering["state"] in ["Active", "Paused"]:
+                    provider_contact = provider["users"][-1]
                     create_offer_for_waldur_offering(waldur_offering, provider_contact)
                 elif waldur_offering["state"] in ["Archived", "Draft"]:
                     deactivate_offer(waldur_offering)
