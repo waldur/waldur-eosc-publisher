@@ -1,3 +1,50 @@
+import logging
+import os
+import sys
+
+from waldur_client import WaldurClient
+
+logging.getLogger("requests").setLevel(logging.WARNING)
+logging.basicConfig(
+    level=logging.INFO,
+    format="[%(asctime)s] %(filename)s:%(lineno)d %(levelname)s - %(message)s",
+)
+
+logger = logging.getLogger(__name__)
+
+
+def get_env_or_fail(env_variable_name):
+    # check that required environment variables is set and exit otherwise
+    value = os.environ.get(env_variable_name)
+    if not value:
+        logger.error(f"Mandatory variable {env_variable_name} is missing or empty.")
+        sys.exit(1)
+    else:
+        return value
+
+
+EOSC_MARKETPLACE_BASE_URL = get_env_or_fail("EOSC_URL")  # TODO: Fix env var name
+EOSC_MARKETPLACE_OFFERING_TOKEN = get_env_or_fail("OFFERING_TOKEN")
+EOSC_PROVIDER_PORTAL_BASE_URL = get_env_or_fail("OFFERING_URL")
+EOSC_AAI_REFRESH_TOKEN = get_env_or_fail("REFRESH_TOKEN")
+EOSC_AAI_CLIENT_ID = get_env_or_fail("CLIENT_ID")
+EOSC_AAI_REFRESH_TOKEN_URL = get_env_or_fail("REFRESH_TOKEN_URL")
+EOSC_PORTAL_ORGANIZATION_EID = get_env_or_fail("ORGANIZATION_EID")
+EOSC_CATALOGUE_ID = get_env_or_fail("EOSC_CATALOGUE_ID")
+WALDUR_TOKEN = get_env_or_fail("WALDUR_TOKEN")
+WALDUR_API_URL = get_env_or_fail("WALDUR_URL")
+WALDUR_TARGET_CUSTOMER_UUID = get_env_or_fail("CUSTOMER_UUID")
+
+CATALOGUE_PREFIX = f"/api/catalogue/{EOSC_CATALOGUE_ID}/"
+RESOURCE_LIST_URL = "/api/v1/resources/"
+RESOURCE_URL = "/api/v1/resources/%s/"
+OFFER_LIST_URL = "/api/v1/resources/%s/offers/"
+OFFER_URL = "/api/v1/resources/%s/offers/%s"
+PROVIDER_SERVICES_URL = CATALOGUE_PREFIX + "%s/resource/all"
+PROVIDER_URL = CATALOGUE_PREFIX + "provider/"
+waldur_client = WaldurClient(WALDUR_API_URL, WALDUR_TOKEN)
+
+
 scientific_domain_and_subdomain_dict = {
     "scientific_domain-agricultural_sciences": [
         "scientific_subdomain-agricultural_sciences-agricultural_biotechnology",
