@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import Mock
 
 from src import utils
-from src.utils import get_or_create_eosc_provider
+from src.marketplace_utils import get_or_create_eosc_provider
 
 
 class TestOffers(unittest.TestCase):
