@@ -2,14 +2,12 @@ import unittest
 from unittest.mock import Mock
 
 from eosc_publisher import provider_utils
-from eosc_publisher.marketplace_utils import
 
 
 class TestOffers(unittest.TestCase):
     def test_get_or_create_eosc_provider(self):
         mock_sync_provider = Mock()
         provider_utils.sync_eosc_provider = mock_sync_provider
-        get_or_create_eosc_provider.return_value = {}
 
         # provider, is_approved = get_or_create_eosc_provider()
 

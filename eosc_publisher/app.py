@@ -15,11 +15,11 @@ def process_offers():
     )
 
     if len(waldur_offerings) == 0:
-        logger.info('There are no offerings ready for sync with EOSC portal.')
+        logger.info("There are no offerings ready for sync with EOSC portal.")
 
     for waldur_offering in waldur_offerings:
         try:
-            logger.info('Syncing offering %s', waldur_offering['name'])
+            logger.info("Syncing offering %s", waldur_offering["name"])
             provider = provider_utils.sync_eosc_provider()
             if waldur_offering["state"] in ["Active", "Paused"]:
                 provider_contact = provider["users"][-1]
