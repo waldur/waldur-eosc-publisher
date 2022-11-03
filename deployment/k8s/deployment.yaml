@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: waldur-eosc-publisher
-          image: registry.hpc.ut.ee/mirror/opennode/waldur-eosc-publisher:latest
+          image: registry.hpc.ut.ee/mirror/opennrode/waldur-eosc-publisher:latest
           imagePullPolicy: Always
           # TODO
           # livenessProbe:
