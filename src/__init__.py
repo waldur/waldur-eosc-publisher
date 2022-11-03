@@ -36,11 +36,12 @@ WALDUR_API_URL = get_env_or_fail("WALDUR_URL")
 WALDUR_TARGET_CUSTOMER_UUID = get_env_or_fail("CUSTOMER_UUID")
 
 CATALOGUE_PREFIX = f"/api/catalogue/{EOSC_CATALOGUE_ID}/"
-RESOURCE_LIST_URL = "/api/v1/resources/"
-RESOURCE_URL = "/api/v1/resources/%s/"
+MARKETPLACE_RESOURCE_LIST_URL = "/api/v1/resources/"
+MARKETPLACE_RESOURCE_URL = "/api/v1/resources/%s/"
 OFFER_LIST_URL = "/api/v1/resources/%s/offers/"
 OFFER_URL = "/api/v1/resources/%s/offers/%s"
 PROVIDER_SERVICES_URL = CATALOGUE_PREFIX + "%s/resource/all"
+PROVIDER_RESOURCE_URL = "resource/"
 PROVIDER_URL = CATALOGUE_PREFIX + "provider/"
 waldur_client = WaldurClient(WALDUR_API_URL, WALDUR_TOKEN)
 

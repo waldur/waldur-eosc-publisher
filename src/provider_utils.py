@@ -10,6 +10,7 @@ from . import (
     EOSC_CATALOGUE_ID,
     EOSC_PORTAL_ORGANIZATION_EID,
     EOSC_PROVIDER_PORTAL_BASE_URL,
+    PROVIDER_RESOURCE_URL,
     PROVIDER_SERVICES_URL,
     PROVIDER_URL,
     WALDUR_API_URL,
@@ -33,137 +34,7 @@ def get_provider_token():
     return token
 
 
-def get_resource_by_id(resource_id):
-    headers = {"Accept": "application/json"}
-    response = requests.get(
-        urllib.parse.urljoin(EOSC_PROVIDER_PORTAL_BASE_URL, f"resource/{resource_id}"),
-        headers=headers,
-    )
-    data = response.json()
-    return data
-
-
-def get_all_resources_from_provider():
-    headers = {"Accept": "application/json"}
-    response = requests.get(
-        urllib.parse.urljoin(
-            EOSC_PROVIDER_PORTAL_BASE_URL,
-            PROVIDER_SERVICES_URL % EOSC_PORTAL_ORGANIZATION_EID,
-        ),
-        # 'catalogue/<eosc-nordic>/<tnp>/resource/all'
-        headers=headers,
-    )
-    data = response.json()
-    resource_names = [item["name"] for item in data]
-    resource_ids = [item["id"] for item in data]
-    return resource_names, resource_ids
-
-
-def create_resource(waldur_offering, provider_contact):
-    headers = {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        "Authorization": get_provider_token(),
-    }
-    landing = (
-        WALDUR_API_URL.replace("https://api.", "https://").rstrip("/api/")
-        + "/marketplace-public-offering"
-        + waldur_offering["uuid"]
-        + "/"
-    )
-    resource_payload = {
-        "name": waldur_offering["name"],
-        "abbreviation": waldur_offering["name"],
-        "resourceOrganisation": EOSC_PORTAL_ORGANIZATION_EID,  # waldur_offering['customer_name']
-        "resourceProviders": [
-            EOSC_PORTAL_ORGANIZATION_EID
-        ],  # waldur_offering['customer_name']
-        "webpage": landing,
-        "description": waldur_offering["description"] or "sample text",
-        "tagline": waldur_offering["name"].lower(),
-        "logo": waldur_offering["thumbnail"] or "https://etais.ee/images/logo.png",
-        "termsOfUse": landing,
-        "privacyPolicy": landing,
-        "scientificDomains": [
-            {
-                "scientificDomain": "scientific_domain-agricultural_sciences",
-                "scientificSubdomain": "scientific_subdomain-agricultural_sciences-agricultural_biotechnology",
-            }
-        ],
-        # ???
-        "categories": [
-            {
-                "category": "category-aggregators_and_integrators-aggregators_and_integrators",
-                "subcategory": "subcategory-aggregators_and_integrators-aggregators_and_integrators-applications",
-            }
-        ],
-        # ???
-        "targetUsers": ["target_user-businesses"],
-        # "accessTypes": [
-        # ],
-        # "accessModes": [
-        # ],
-        # "tags": [
-        # ],
-        "geographicalAvailabilities": ["EO"],
-        "languageAvailabilities": ["en"],
-        "mainContact": {
-            "firstName": provider_contact["name"],
-            "lastName": provider_contact["surname"],
-            "email": provider_contact["email"] or "etais@etais.ee",
-        },
-        "publicContacts": [
-            {
-                "email": waldur_offering["attributes"]["vpc_Support_email"]
-                if len(waldur_offering["attributes"]) > 0
-                else "etais@etais.ee",
-            }
-        ],
-        "helpdeskEmail": waldur_offering["attributes"]["vpc_Support_email"]
-        if len(waldur_offering["attributes"]) > 0
-        else "etais@etais.ee",
-        "securityContactEmail": waldur_offering["attributes"]["vpc_Support_email"]
-        if len(waldur_offering["attributes"]) > 0
-        else "etais@etais.ee",
-        "trl": "trl-9",
-        "catalogueId": EOSC_CATALOGUE_ID,
-        "orderType": "order_type-order_required",
-    }
-    response = requests.post(
-        urllib.parse.urljoin(EOSC_PROVIDER_PORTAL_BASE_URL, "resource/"),
-        headers=headers,
-        data=resource_payload,
-    )
-    if response.status_code not in [200, 201]:
-        logger.error(
-            "Error creating resource in Marketplace. Code %s, error: %s",
-            (response.status_code, response.text),
-        )
-    else:
-        return response.json()
-
-
-def get_or_create_eosc_resource(
-    waldur_offering, provider_contact
-):  # , eosc_provider_portal=None
-    resource_names, resource_ids = get_all_resources_from_provider()
-    if waldur_offering["name"] in resource_names:
-        existing_resource = get_resource_by_id(
-            resource_ids[resource_names.index(waldur_offering["name"])]
-        )
-        logger.info("Resource is already in EOSC: %s", existing_resource["name"])
-        return existing_resource
-    else:
-        resource = create_resource(waldur_offering, provider_contact)
-        logger.info("New resource has been created in EOSC: %s", resource)
-        return resource
-
-
-def create_eosc_provider():
-    waldur_customer = waldur_client._get_resource(
-        waldur_client.Endpoints.Customers, WALDUR_TARGET_CUSTOMER_UUID
-    )
-
+def construct_provider_payload(waldur_customer, provider_id=None):
     if waldur_customer["image"]:
         logo_url = waldur_customer["homepage"]
     else:
@@ -200,6 +71,8 @@ def create_eosc_provider():
         "catalogueId": EOSC_CATALOGUE_ID,
         "users": [],
     }
+    if provider_id:
+        provider_payload["id"] = provider_id
 
     first_owner = waldur_customer["owners"][0]
     [first_name, last_name] = first_owner["full_name"].split(maxsplit=1)
@@ -224,6 +97,211 @@ def create_eosc_provider():
     if waldur_customer["division"]:
         provider_payload["affiliations"] = [waldur_customer["division"]]
 
+    return provider_payload
+
+
+def construct_resource_payload(waldur_offering, provider_contact, resource_id=None):
+    landing = (
+        WALDUR_API_URL.replace("https://api.", "https://").rstrip("/api/")
+        + "/marketplace-public-offering"
+        + waldur_offering["uuid"]
+        + "/"
+    )
+    helpdesk_email = (
+        waldur_offering["attributes"]["vpc_Support_email"]
+        if len(waldur_offering["attributes"]) > 0
+        else "etais@etais.ee"
+    )
+    public_email = (
+        waldur_offering["attributes"]["vpc_Support_email"]
+        if len(waldur_offering["attributes"]) > 0
+        else "etais@etais.ee"
+    )
+    security_email = (
+        waldur_offering["attributes"]["vpc_Support_email"]
+        if len(waldur_offering["attributes"]) > 0
+        else "etais@etais.ee"
+    )
+    if waldur_offering["thumbnail"]:
+        logo_url = waldur_offering["thumbnail"]
+    else:
+        configuration = waldur_client.get_configuration()
+        homeport_url = configuration["WALDUR_CORE"]["HOMEPORT_URL"]
+        logo_url = urllib.parse.urljoin(
+            homeport_url,
+            "images/login_logo.png",
+        )
+    resource_payload = {
+        "name": waldur_offering["name"],
+        "abbreviation": waldur_offering["name"],
+        "resourceOrganisation": EOSC_PORTAL_ORGANIZATION_EID,
+        "resourceProviders": [EOSC_PORTAL_ORGANIZATION_EID],
+        "webpage": landing,
+        "description": waldur_offering["description"] or "sample text",
+        "tagline": waldur_offering["name"].lower(),
+        "logo": logo_url,
+        "termsOfUse": landing,
+        "privacyPolicy": landing,
+        "scientificDomains": [
+            {
+                "scientificDomain": "scientific_domain-agricultural_sciences",
+                "scientificSubdomain": "scientific_subdomain-agricultural_sciences-agricultural_biotechnology",
+            }
+        ],
+        # ???
+        "categories": [
+            {
+                "category": "category-aggregators_and_integrators-aggregators_and_integrators",
+                "subcategory": "subcategory-aggregators_and_integrators-aggregators_and_integrators-applications",
+            }
+        ],
+        # ???
+        "targetUsers": ["target_user-businesses"],
+        "geographicalAvailabilities": ["EO"],
+        "languageAvailabilities": ["en"],
+        "mainContact": {
+            "firstName": provider_contact["name"],
+            "lastName": provider_contact["surname"],
+            "email": provider_contact["email"] or "etais@etais.ee",
+        },
+        "publicContacts": [
+            {
+                "email": public_email,
+            }
+        ],
+        "helpdeskEmail": helpdesk_email,
+        "securityContactEmail": security_email,
+        "trl": "trl-9",
+        "catalogueId": EOSC_CATALOGUE_ID,
+        "orderType": "order_type-order_required",
+    }
+
+    if resource_id:
+        resource_payload["id"] = resource_id
+
+    return resource_payload
+
+
+def get_resource_by_id(resource_id):
+    headers = {"Accept": "application/json"}
+    response = requests.get(
+        urllib.parse.urljoin(EOSC_PROVIDER_PORTAL_BASE_URL, f"resource/{resource_id}"),
+        headers=headers,
+    )
+    data = response.json()
+    return data
+
+
+def get_all_resources_from_provider():
+    headers = {"Accept": "application/json"}
+    response = requests.get(
+        urllib.parse.urljoin(
+            EOSC_PROVIDER_PORTAL_BASE_URL,
+            PROVIDER_SERVICES_URL % EOSC_PORTAL_ORGANIZATION_EID,
+        ),
+        # 'catalogue/<eosc-nordic>/<tnp>/resource/all'
+        headers=headers,
+    )
+    data = response.json()
+    resource_names = [item["name"] for item in data]
+    resource_ids = [item["id"] for item in data]
+    return resource_names, resource_ids
+
+
+def update_eosc_resource(waldur_offering, provider_contact, resource_id):
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": get_provider_token(),
+    }
+    resource_payload = construct_resource_payload(
+        waldur_offering, provider_contact, resource_id
+    )
+    response = requests.put(
+        urllib.parse.urljoin(EOSC_PROVIDER_PORTAL_BASE_URL, PROVIDER_RESOURCE_URL),
+        headers=headers,
+        data=resource_payload,
+    )
+    if response.status_code not in [200, 201]:
+        logger.error(
+            "Error creating resource in Marketplace. Code %s, error: %s",
+            (response.status_code, response.text),
+        )
+    else:
+        return response.json()
+
+
+def create_eosc_resource(waldur_offering, provider_contact):
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": get_provider_token(),
+    }
+    resource_payload = construct_resource_payload(waldur_offering, provider_contact)
+    response = requests.post(
+        urllib.parse.urljoin(EOSC_PROVIDER_PORTAL_BASE_URL, PROVIDER_RESOURCE_URL),
+        headers=headers,
+        data=resource_payload,
+    )
+    if response.status_code not in [200, 201]:
+        logger.error(
+            "Error creating resource in Marketplace. Code %s, error: %s",
+            (response.status_code, response.text),
+        )
+    else:
+        return response.json()
+
+
+def sync_eosc_resource(
+    waldur_offering, provider_contact
+):  # , eosc_provider_portal=None
+    resource_names, resource_ids = get_all_resources_from_provider()
+    if waldur_offering["name"] in resource_names:
+        resource_id = resource_ids[resource_names.index(waldur_offering["name"])]
+        existing_resource = get_resource_by_id(resource_id)
+        logger.info("Resource is already in EOSC: %s", existing_resource["name"])
+        updated_existing_resource = update_eosc_resource(resource_id)
+        logger.info(
+            "Resource %s has been successfully updated",
+            updated_existing_resource["name"],
+        )
+        return updated_existing_resource
+    else:
+        resource = create_eosc_resource(waldur_offering, provider_contact)
+        logger.info("New resource has been created in EOSC: %s", resource)
+        return resource
+
+
+def update_eosc_provider(provider_id):
+    waldur_customer = waldur_client._get_resource(
+        waldur_client.Endpoints.Customers, WALDUR_TARGET_CUSTOMER_UUID
+    )
+    provider_payload = construct_provider_payload(waldur_customer, provider_id)
+
+    provider_url = urllib.parse.urljoin(
+        EOSC_PROVIDER_PORTAL_BASE_URL,
+        PROVIDER_URL,
+    )
+    provider_response = requests.put(
+        provider_url,
+        data=provider_payload,
+    )
+
+    if provider_response.status_code not in [http_codes.OK, http_codes.CREATED]:
+        raise Exception(
+            "Unable to update the provider (id=%s). Code %s, error: %s"
+            % (provider_id, provider_response.status_code, provider_response.text)
+        )
+
+    return provider_response.json()
+
+
+def create_eosc_provider():
+    waldur_customer = waldur_client._get_resource(
+        waldur_client.Endpoints.Customers, WALDUR_TARGET_CUSTOMER_UUID
+    )
+    provider_payload = construct_provider_payload(waldur_customer)
+
     provider_url = urllib.parse.urljoin(
         EOSC_PROVIDER_PORTAL_BASE_URL,
         PROVIDER_URL,
@@ -242,7 +320,7 @@ def create_eosc_provider():
     return provider_response.json()
 
 
-def get_or_create_eosc_provider():
+def sync_eosc_provider():
     headers = {
         "Accept": "application/json",
         "Authorization": get_provider_token(),
@@ -262,10 +340,11 @@ def get_or_create_eosc_provider():
     elif provider_response.status_code == http_codes.OK:
         provider_json = provider_response.json()
         logger.info("Existing provider name: %s", provider_json["name"])
-        provider_json["is_approved"] = True
-        return provider_json, False
+        refreshed_provider_json = update_eosc_provider(provider_json["id"])
+        refreshed_provider_json["is_approved"] = True
+        return refreshed_provider_json, False
     else:
         raise Exception(
-            "Unable to get a provider. Code %s, error: %",
+            "Unable to sync a provider. Code %s, error: %s",
             (provider_response.status_code, provider_response.text),
         )
