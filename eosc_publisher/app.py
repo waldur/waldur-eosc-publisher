@@ -1,7 +1,7 @@
 from time import sleep
 
-import marketplace_utils
-import provider_utils
+from eosc_publisher import marketplace_utils
+from eosc_publisher import provider_utils
 
 from . import WALDUR_TARGET_CUSTOMER_UUID, logger, waldur_client
 
