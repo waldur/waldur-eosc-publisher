@@ -7,10 +7,10 @@ from requests.status_codes import codes as http_codes
 from . import (
     EOSC_MARKETPLACE_BASE_URL,
     EOSC_MARKETPLACE_OFFERING_TOKEN,
+    MARKETPLACE_RESOURCE_LIST_URL,
+    MARKETPLACE_RESOURCE_URL,
     OFFER_LIST_URL,
     OFFER_URL,
-    RESOURCE_LIST_URL,
-    RESOURCE_URL,
     WALDUR_API_URL,
     logger,
 )
@@ -59,7 +59,7 @@ def offering_request_delete():
 def get_resource_list():
     headers = resource_and_offering_request()
     response = requests.get(
-        urllib.parse.urljoin(EOSC_MARKETPLACE_BASE_URL, RESOURCE_LIST_URL),
+        urllib.parse.urljoin(EOSC_MARKETPLACE_BASE_URL, MARKETPLACE_RESOURCE_LIST_URL),
         headers=headers,
     )
     resource_list_data = response.json()
@@ -70,7 +70,7 @@ def get_resource(resource_id):
     headers = resource_and_offering_request()
     response = requests.get(
         urllib.parse.urljoin(
-            EOSC_MARKETPLACE_BASE_URL, RESOURCE_URL % (str(resource_id))
+            EOSC_MARKETPLACE_BASE_URL, MARKETPLACE_RESOURCE_URL % (str(resource_id))
         ),
         headers=headers,
     )

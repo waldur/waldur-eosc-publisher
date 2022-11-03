@@ -16,15 +16,13 @@ def process_offers():
 
     for waldur_offering in waldur_offerings:
         try:
-            provider, created = provider_utils.get_or_create_eosc_provider(
-                waldur_offering["customer_uuid"]
-            )
+            provider, created = provider_utils.sync_eosc_provider()
             if created:
                 logger.info("Provider has been created, pending approval")
             elif provider["is_approved"]:
                 if waldur_offering["state"] in ["Active", "Paused"]:
                     provider_contact = provider["users"][-1]
-                    provider_resource = provider_utils.get_or_create_eosc_resource(
+                    provider_resource = provider_utils.sync_eosc_resource(
                         waldur_offering, provider_contact
                     )
                     marketplace_utils.create_offer_for_waldur_offering(
