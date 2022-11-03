@@ -182,8 +182,11 @@ def construct_resource_payload(waldur_offering, provider_contact, resource_id=No
     return resource_payload
 
 
-def get_resource_by_id(resource_id):
-    headers = {"Accept": "application/json"}
+def get_resource_by_id(resource_id, token):
+    headers = {
+        "Accept": "application/json",
+        "Authorization": token,
+    }
     response = requests.get(
         urllib.parse.urljoin(EOSC_PROVIDER_PORTAL_BASE_URL, f"resource/{resource_id}"),
         headers=headers,
@@ -192,9 +195,12 @@ def get_resource_by_id(resource_id):
     return data
 
 
-def get_all_resources_from_provider():
+def get_all_resources_from_provider(token):
     logger.info('Fetching all resources for provider %s', EOSC_PORTAL_ORGANIZATION_EID)
-    headers = {"Accept": "application/json"}
+    headers = {
+        "Accept": "application/json",
+        "Authorization": token,
+    }
     response = requests.get(
         urllib.parse.urljoin(
             EOSC_PROVIDER_PORTAL_BASE_URL,
@@ -209,14 +215,14 @@ def get_all_resources_from_provider():
     return resource_names, resource_ids
 
 
-def update_eosc_resource(waldur_offering, provider_contact, resource_id):
+def update_eosc_resource(waldur_offering, provider_contact, resource_id, token):
     logger.error(
         "Updating provider resource %s", resource_id
     )
     headers = {
         "Content-Type": "application/json",
         "Accept": "application/json",
-        "Authorization": get_provider_token(),
+        "Authorization": token,
     }
     resource_payload = construct_resource_payload(
         waldur_offering, provider_contact, resource_id
@@ -240,12 +246,12 @@ def update_eosc_resource(waldur_offering, provider_contact, resource_id):
         return resource
 
 
-def create_eosc_resource(waldur_offering, provider_contact):
+def create_eosc_resource(waldur_offering, provider_contact, token):
     logger.info('Creating a resource for %s', waldur_offering['name'])
     headers = {
         "Content-Type": "application/json",
         "Accept": "application/json",
-        "Authorization": get_provider_token(),
+        "Authorization": token,
     }
     resource_payload = construct_resource_payload(waldur_offering, provider_contact)
     response = requests.post(
@@ -267,20 +273,21 @@ def sync_eosc_resource(
     waldur_offering, provider_contact
 ):  # , eosc_provider_portal=None
     logger.info('Syncing resource for offering %s', waldur_offering['name'])
-    resource_names, resource_ids = get_all_resources_from_provider()
+    token = get_provider_token()
+    resource_names, resource_ids = get_all_resources_from_provider(token)
     if waldur_offering["name"] in resource_names:
         resource_id = resource_ids[resource_names.index(waldur_offering["name"])]
-        existing_resource = get_resource_by_id(resource_id)
+        existing_resource = get_resource_by_id(resource_id, token)
         logger.info("Resource already exists in EOSC: %s", existing_resource["name"])
-        updated_existing_resource = update_eosc_resource(resource_id)
+        updated_existing_resource = update_eosc_resource(waldur_offering, provider_contact, resource_id, token)
         return updated_existing_resource
     else:
         logger.info('The resource is missing, creating a new one')
-        resource = create_eosc_resource(waldur_offering, provider_contact)
+        resource = create_eosc_resource(waldur_offering, provider_contact, token)
         return resource
 
 
-def update_eosc_provider(provider_id):
+def update_eosc_provider(provider_id, token):
     waldur_customer = waldur_client._get_resource(
         waldur_client.Endpoints.Customers, WALDUR_TARGET_CUSTOMER_UUID
     )
@@ -290,9 +297,15 @@ def update_eosc_provider(provider_id):
         EOSC_PROVIDER_PORTAL_BASE_URL,
         PROVIDER_URL,
     )
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": token,
+    }
     provider_response = requests.put(
         provider_url,
         data=provider_payload,
+        headers=headers
     )
 
     if provider_response.status_code not in [http_codes.OK, http_codes.CREATED]:
@@ -306,7 +319,7 @@ def update_eosc_provider(provider_id):
     return provider
 
 
-def create_eosc_provider():
+def create_eosc_provider(token):
     waldur_customer = waldur_client._get_resource(
         waldur_client.Endpoints.Customers, WALDUR_TARGET_CUSTOMER_UUID
     )
@@ -317,9 +330,15 @@ def create_eosc_provider():
         EOSC_PROVIDER_PORTAL_BASE_URL,
         PROVIDER_URL,
     )
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": token,
+    }
     provider_response = requests.post(
         provider_url,
         data=provider_payload,
+        headers=headers,
     )
 
     if provider_response.status_code not in [http_codes.OK, http_codes.CREATED]:
@@ -335,9 +354,10 @@ def create_eosc_provider():
 
 def sync_eosc_provider():
     logger.info('Syncing provider %s', EOSC_PORTAL_ORGANIZATION_EID)
+    token = get_provider_token()
     headers = {
         "Accept": "application/json",
-        "Authorization": get_provider_token(),
+        "Authorization": token,
     }
     provider_url = urllib.parse.urljoin(
         EOSC_PROVIDER_PORTAL_BASE_URL,
@@ -350,12 +370,12 @@ def sync_eosc_provider():
 
     if provider_response.status_code == http_codes.NOT_FOUND:
         logger.info('The provider is not found')
-        provider_json = create_eosc_provider()
+        provider_json = create_eosc_provider(token)
         return provider_json
     elif provider_response.status_code == http_codes.OK:
         provider_json = provider_response.json()
         logger.info("Existing provider name: %s", provider_json["name"])
-        refreshed_provider_json = update_eosc_provider(provider_json["id"])
+        refreshed_provider_json = update_eosc_provider(provider_json["id"], token)
         return refreshed_provider_json
     else:
         raise Exception(
