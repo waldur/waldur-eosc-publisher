@@ -11,4 +11,4 @@ RUN pip install -r requirements/requirements.txt --no-cache-dir
 
 ENTRYPOINT [ "python3" ]
 
-CMD [ "/src/src/app.py" ]
+CMD [ "-m", "src.app" ]
