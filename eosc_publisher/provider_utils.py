@@ -265,10 +265,9 @@ def create_eosc_resource(waldur_offering, provider_contact, provider_id, token):
         json=resource_payload,
     )
     if response.status_code not in [200, 201]:
-        logger.error(
-            "Error creating resource in Marketplace. Code %s, error: %s",
-            response.status_code,
-            response.text,
+        raise Exception(
+            "Error creating resource in Marketplace. Code %s, error: %s"
+            % (response.status_code, response.text),
         )
     else:
         logger.info(
