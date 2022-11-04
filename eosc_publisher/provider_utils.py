@@ -237,7 +237,8 @@ def update_eosc_resource(
     if response.status_code not in [200, 201]:
         logger.error(
             "Error during updating of resource in the provider portal. Code %s, error: %s",
-            (response.status_code, response.text),
+            response.status_code,
+            response.text,
         )
     else:
         resource = response.json()
@@ -266,7 +267,8 @@ def create_eosc_resource(waldur_offering, provider_contact, provider_id, token):
     if response.status_code not in [200, 201]:
         logger.error(
             "Error creating resource in Marketplace. Code %s, error: %s",
-            (response.status_code, response.text),
+            response.status_code,
+            response.text,
         )
     else:
         logger.info(
@@ -374,8 +376,8 @@ def get_eosc_provider(provider_id, token):
         return provider_json
 
     raise Exception(
-        "Unable to sync a provider. Code %s, error: %s",
-        (provider_response.status_code, provider_response.text),
+        "Unable to sync a provider. Code %s, error: %s"
+        % (provider_response.status_code, provider_response.text)
     )
 
 
