@@ -83,7 +83,7 @@ def construct_provider_payload(waldur_customer, provider_id=None):
         "phone": waldur_customer["phone_number"],
     }
     provider_payload["publicContacts"] = [
-        {"email": waldur_customer["email"] or first_owner["email"]}
+        {"email": waldur_customer["email"] or "support@puhuri.io"}
     ]
 
     if waldur_customer["domain"]:
