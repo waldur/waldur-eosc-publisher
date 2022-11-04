@@ -43,7 +43,7 @@ spec:
           - name: REFRESH_TOKEN_URL
             value: "https://aai.eosc-portal.eu/oidc/token"
           - name: WALDUR_URL
-            value: http://waldur-mastermind-api:8080/api/
+            value: "https://share.neic.no/api/"
           - name: CUSTOMER_UUID
             value: "<CUSTOMER_UUID>"
           - name: EOSC_CATALOGUE_ID

@@ -12,7 +12,6 @@ from . import (
     EOSC_PROVIDER_PORTAL_BASE_URL,
     PROVIDER_RESOURCE_URL,
     PROVIDER_URL,
-    WALDUR_API_URL,
     WALDUR_TARGET_CUSTOMER_UUID,
     logger,
     waldur_client,
@@ -53,7 +52,7 @@ def construct_provider_payload(waldur_customer, provider_id=None, users=[]):
     )[0]
     description = (
         service_provider["description"]
-        or "%s provider in EOSC marketplace" % waldur_customer["name"]
+        or "%s provider in EOSC portal" % waldur_customer["name"]
     )
     provider_payload = {
         "abbreviation": waldur_customer["abbreviation"],
@@ -104,11 +103,11 @@ def construct_provider_payload(waldur_customer, provider_id=None, users=[]):
 def construct_resource_payload(
     waldur_offering, provider_contact, provider_id, resource_id=None
 ):
-    landing = (
-        WALDUR_API_URL.replace("https://api.", "https://").rstrip("/api/")
-        + "/marketplace-public-offering"
-        + waldur_offering["uuid"]
-        + "/"
+    configuration = waldur_client.get_configuration()
+    homeport_url = configuration["WALDUR_CORE"]["HOMEPORT_URL"]
+    landing = urllib.parse.urljoin(
+        homeport_url,
+        f"marketplace-public-offering/{waldur_offering['uuid']}/",
     )
     helpdesk_email = (
         waldur_offering["attributes"]["vpc_Support_email"]
@@ -268,7 +267,7 @@ def create_eosc_resource(waldur_offering, provider_contact, provider_id, token):
     )
     if response.status_code not in [200, 201]:
         raise Exception(
-            "Error creating resource in Marketplace. Code %s, error: %s"
+            "Error creating resource in Providers portal. Code %s, error: %s"
             % (response.status_code, response.text),
         )
     else:
