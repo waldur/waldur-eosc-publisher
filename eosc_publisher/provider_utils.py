@@ -278,7 +278,7 @@ def sync_eosc_resource(
 ):  # , eosc_provider_portal=None
     logger.info("Syncing resource for offering %s", waldur_offering["name"])
     token = get_provider_token()
-    resource_names_and_ids = get_all_resources_from_catalogue(token, provider_id)
+    resource_names_and_ids = get_all_resources_from_catalogue(token)
     if waldur_offering["name"] in resource_names_and_ids:
         resource_id = resource_names_and_ids[waldur_offering["name"]]
         existing_resource = get_resource_by_id(resource_id, token)
@@ -316,7 +316,7 @@ def update_eosc_provider(waldur_customer, provider_id, token, users):
         )
 
     provider = provider_response.json()
-    logger.info("The provider %s has been successfully created", provider["name"])
+    logger.info("The provider %s has been successfully updated", provider["name"])
     return provider
 
 
@@ -348,19 +348,7 @@ def create_eosc_provider(waldur_customer, token):
     return provider
 
 
-def sync_eosc_provider():
-    waldur_customer = waldur_client._get_resource(
-        waldur_client.Endpoints.Customers, WALDUR_TARGET_CUSTOMER_UUID
-    )
-    provider_id = waldur_customer["abbreviation"].lower()
-    if not provider_id:
-        logger.error("The customer %s does not have abbreviation, skipping it")
-        return
-    logger.info(
-        "Syncing customer %s (provider %s)", waldur_customer["name"], provider_id
-    )
-
-    token = get_provider_token()
+def get_eosc_provider(provider_id, token):
     headers = {
         "Accept": "application/json",
         "Authorization": token,
@@ -376,17 +364,39 @@ def sync_eosc_provider():
 
     if provider_response.status_code == http_codes.NOT_FOUND:
         logger.info("The provider is not found")
-        provider_json = create_eosc_provider(waldur_customer, token)
-        return provider_json
-    elif provider_response.status_code == http_codes.OK:
+        return
+
+    if provider_response.status_code == http_codes.OK:
         provider_json = provider_response.json()
         logger.info("Existing provider name: %s", provider_json["name"])
+        return provider_json
+
+    raise Exception(
+        "Unable to sync a provider. Code %s, error: %s",
+        (provider_response.status_code, provider_response.text),
+    )
+
+
+def sync_eosc_provider():
+    waldur_customer = waldur_client._get_resource(
+        waldur_client.Endpoints.Customers, WALDUR_TARGET_CUSTOMER_UUID
+    )
+    provider_id = waldur_customer["abbreviation"].lower()
+    if not provider_id:
+        logger.error("The customer %s does not have abbreviation, skipping it")
+        return
+    logger.info(
+        "Syncing customer %s (provider %s)", waldur_customer["name"], provider_id
+    )
+
+    token = get_provider_token()
+    provider = get_eosc_provider(provider_id, token)
+
+    if provider is None:
+        provider_json = create_eosc_provider(waldur_customer, token)
+        return provider_json
+    else:
         refreshed_provider_json = update_eosc_provider(
             waldur_customer, provider_json["id"], token, provider_json["users"]
         )
         return refreshed_provider_json
-    else:
-        raise Exception(
-            "Unable to sync a provider. Code %s, error: %s",
-            (provider_response.status_code, provider_response.text),
-        )
