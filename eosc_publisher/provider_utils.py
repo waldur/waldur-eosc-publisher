@@ -18,6 +18,8 @@ from . import (
     waldur_client,
 )
 
+DEFAULT_SUPPORT_EMAIL = "support@puhuri.io"
+
 
 def get_provider_token():
     data = {
@@ -82,7 +84,7 @@ def construct_provider_payload(waldur_customer, provider_id=None, users=[]):
         "phone": waldur_customer["phone_number"],
     }
     provider_payload["publicContacts"] = [
-        {"email": waldur_customer["email"] or "support@puhuri.io"}
+        {"email": waldur_customer["email"] or DEFAULT_SUPPORT_EMAIL}
     ]
 
     if waldur_customer["domain"]:
@@ -110,18 +112,18 @@ def construct_resource_payload(
     )
     helpdesk_email = (
         waldur_offering["attributes"]["vpc_Support_email"]
-        if len(waldur_offering["attributes"]) > 0
-        else "etais@etais.ee"
+        if waldur_offering["attributes"].get("vpc_Support_email")
+        else DEFAULT_SUPPORT_EMAIL
     )
     public_email = (
         waldur_offering["attributes"]["vpc_Support_email"]
-        if len(waldur_offering["attributes"]) > 0
-        else "etais@etais.ee"
+        if waldur_offering["attributes"].get("vpc_Support_email")
+        else DEFAULT_SUPPORT_EMAIL
     )
     security_email = (
         waldur_offering["attributes"]["vpc_Support_email"]
-        if len(waldur_offering["attributes"]) > 0
-        else "etais@etais.ee"
+        if waldur_offering["attributes"].get("vpc_Support_email")
+        else DEFAULT_SUPPORT_EMAIL
     )
     if waldur_offering["thumbnail"]:
         logo_url = waldur_offering["thumbnail"]
@@ -163,7 +165,7 @@ def construct_resource_payload(
         "mainContact": {
             "firstName": provider_contact["name"],
             "lastName": provider_contact["surname"],
-            "email": provider_contact["email"] or "etais@etais.ee",
+            "email": provider_contact["email"] or DEFAULT_SUPPORT_EMAIL,
         },
         "publicContacts": [
             {
