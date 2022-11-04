@@ -218,8 +218,6 @@ def get_all_resources_from_provider(token):
 def update_eosc_resource(waldur_offering, provider_contact, resource_id, token):
     logger.error("Updating provider resource %s", resource_id)
     headers = {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
         "Authorization": token,
     }
     resource_payload = construct_resource_payload(
@@ -228,7 +226,7 @@ def update_eosc_resource(waldur_offering, provider_contact, resource_id, token):
     response = requests.put(
         urllib.parse.urljoin(EOSC_PROVIDER_PORTAL_BASE_URL, PROVIDER_RESOURCE_URL),
         headers=headers,
-        data=resource_payload,
+        json=resource_payload,
     )
     if response.status_code not in [200, 201]:
         logger.error(
@@ -247,15 +245,13 @@ def update_eosc_resource(waldur_offering, provider_contact, resource_id, token):
 def create_eosc_resource(waldur_offering, provider_contact, token):
     logger.info("Creating a resource for %s", waldur_offering["name"])
     headers = {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
         "Authorization": token,
     }
     resource_payload = construct_resource_payload(waldur_offering, provider_contact)
     response = requests.post(
         urllib.parse.urljoin(EOSC_PROVIDER_PORTAL_BASE_URL, PROVIDER_RESOURCE_URL),
         headers=headers,
-        data=resource_payload,
+        json=resource_payload,
     )
     if response.status_code not in [200, 201]:
         logger.error(
@@ -300,12 +296,10 @@ def update_eosc_provider(provider_id, token):
         PROVIDER_URL,
     )
     headers = {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
         "Authorization": token,
     }
     provider_response = requests.put(
-        provider_url, data=provider_payload, headers=headers
+        provider_url, json=provider_payload, headers=headers
     )
 
     if provider_response.status_code not in [http_codes.OK, http_codes.CREATED]:
@@ -331,13 +325,11 @@ def create_eosc_provider(token):
         PROVIDER_URL,
     )
     headers = {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
         "Authorization": token,
     }
     provider_response = requests.post(
         provider_url,
-        data=provider_payload,
+        json=provider_payload,
         headers=headers,
     )
 
