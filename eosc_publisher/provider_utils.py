@@ -33,7 +33,7 @@ def get_provider_token():
     return token
 
 
-def construct_provider_payload(waldur_customer, provider_id=None):
+def construct_provider_payload(waldur_customer, provider_id=None, users=[]):
     if waldur_customer["image"]:
         logo_url = waldur_customer["homepage"]
     else:
@@ -68,7 +68,7 @@ def construct_provider_payload(waldur_customer, provider_id=None):
         },
         "participatingCountries": [waldur_customer["country"]],
         "catalogueId": EOSC_CATALOGUE_ID,
-        "users": [],
+        "users": users,
     }
     if provider_id:
         provider_payload["id"] = provider_id
@@ -205,7 +205,7 @@ def get_all_resources_from_catalogue(token):
     response = requests.get(
         urllib.parse.urljoin(
             EOSC_PROVIDER_PORTAL_BASE_URL,
-            f"{CATALOGUE_SERVICES_URL}/{EOSC_CATALOGUE_ID}",
+            f"{CATALOGUE_SERVICES_URL}{EOSC_CATALOGUE_ID}",
         ),
         headers=headers,
     )
@@ -295,8 +295,8 @@ def sync_eosc_resource(
         return resource
 
 
-def update_eosc_provider(waldur_customer, provider_id, token):
-    provider_payload = construct_provider_payload(waldur_customer, provider_id)
+def update_eosc_provider(waldur_customer, provider_id, token, users):
+    provider_payload = construct_provider_payload(waldur_customer, provider_id, users)
 
     provider_url = urllib.parse.urljoin(
         EOSC_PROVIDER_PORTAL_BASE_URL,
@@ -367,7 +367,7 @@ def sync_eosc_provider():
     }
     provider_url = urllib.parse.urljoin(
         EOSC_PROVIDER_PORTAL_BASE_URL,
-        f"{PROVIDER_URL}/{provider_id}",
+        f"{PROVIDER_URL}{provider_id}",
     )
     provider_response = requests.get(
         provider_url,
@@ -382,7 +382,7 @@ def sync_eosc_provider():
         provider_json = provider_response.json()
         logger.info("Existing provider name: %s", provider_json["name"])
         refreshed_provider_json = update_eosc_provider(
-            waldur_customer, provider_json["id"], token
+            waldur_customer, provider_json["id"], token, provider_json["users"]
         )
         return refreshed_provider_json
     else:

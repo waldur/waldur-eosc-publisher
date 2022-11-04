@@ -21,7 +21,7 @@ spec:
           env:
           - name: EOSC_URL
             value: "https://marketplace-3.docker-fid.grid.cyf-kr.edu.pl/"
-          - name: OFFERING_URL
+          - name: PROVIDERS_PORTAL_URL
             value: "https://beta.providers.eosc-portal.eu/api/"
           - name: WALDUR_TOKEN
             valueFrom:
@@ -46,7 +46,5 @@ spec:
             value: http://waldur-mastermind-api:8080/api/
           - name: CUSTOMER_UUID
             value: "<CUSTOMER_UUID>"
-          - name: ORGANIZATION_EID
-            value: "tnp"
           - name: EOSC_CATALOGUE_ID
             value: "eosc-nordic"

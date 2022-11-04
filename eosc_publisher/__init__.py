@@ -25,7 +25,7 @@ def get_env_or_fail(env_variable_name):
 
 EOSC_MARKETPLACE_BASE_URL = get_env_or_fail("EOSC_URL")  # TODO: Fix env var name
 EOSC_MARKETPLACE_OFFERING_TOKEN = get_env_or_fail("OFFERING_TOKEN")
-EOSC_PROVIDER_PORTAL_BASE_URL = get_env_or_fail("OFFERING_URL")
+EOSC_PROVIDER_PORTAL_BASE_URL = get_env_or_fail("PROVIDERS_PORTAL_URL")
 EOSC_AAI_REFRESH_TOKEN = get_env_or_fail("REFRESH_TOKEN")
 EOSC_AAI_CLIENT_ID = get_env_or_fail("CLIENT_ID")
 EOSC_AAI_REFRESH_TOKEN_URL = get_env_or_fail("REFRESH_TOKEN_URL")
@@ -41,7 +41,7 @@ OFFER_LIST_URL = "/api/v1/resources/%s/offers/"
 OFFER_URL = "/api/v1/resources/%s/offers/%s"
 PROVIDER_SERVICES_URL = CATALOGUE_PREFIX + "%s/resource/all"
 PROVIDER_RESOURCE_URL = "resource/"
-CATALOGUE_SERVICES_URL = "service/byCatalogue"
+CATALOGUE_SERVICES_URL = "service/byCatalogue/"
 PROVIDER_URL = CATALOGUE_PREFIX + "provider/"
 waldur_client = WaldurClient(WALDUR_API_URL, WALDUR_TOKEN)
 

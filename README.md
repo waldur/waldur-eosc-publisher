@@ -5,7 +5,7 @@
 ### utils_offers.py
 
 - `EOSC_URL` - EOSC Marketplace base url
-- `OFFERING_URL` - EOSC Marketplace Offering API url
+- `PROVIDERS_PORTAL_URL` - EOSC Providers portal API url
 - `WALDUR_TOKEN` - Waldur token
 - `OFFERING_TOKEN` - EOSC Marketplace Offering API token
 - `REFRESH_TOKEN` - EOSC Portal Provider API refresh token to get access token
