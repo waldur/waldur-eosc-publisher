@@ -29,7 +29,6 @@ EOSC_PROVIDER_PORTAL_BASE_URL = get_env_or_fail("OFFERING_URL")
 EOSC_AAI_REFRESH_TOKEN = get_env_or_fail("REFRESH_TOKEN")
 EOSC_AAI_CLIENT_ID = get_env_or_fail("CLIENT_ID")
 EOSC_AAI_REFRESH_TOKEN_URL = get_env_or_fail("REFRESH_TOKEN_URL")
-EOSC_PORTAL_ORGANIZATION_EID = get_env_or_fail("ORGANIZATION_EID")
 EOSC_CATALOGUE_ID = get_env_or_fail("EOSC_CATALOGUE_ID")
 WALDUR_TOKEN = get_env_or_fail("WALDUR_TOKEN")
 WALDUR_API_URL = get_env_or_fail("WALDUR_URL")
@@ -42,6 +41,7 @@ OFFER_LIST_URL = "/api/v1/resources/%s/offers/"
 OFFER_URL = "/api/v1/resources/%s/offers/%s"
 PROVIDER_SERVICES_URL = CATALOGUE_PREFIX + "%s/resource/all"
 PROVIDER_RESOURCE_URL = "resource/"
+CATALOGUE_SERVICES_URL = "service/byCatalogue"
 PROVIDER_URL = CATALOGUE_PREFIX + "provider/"
 waldur_client = WaldurClient(WALDUR_API_URL, WALDUR_TOKEN)
 

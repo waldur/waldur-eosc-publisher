@@ -1,7 +1,6 @@
 from time import sleep
 
-from eosc_publisher import marketplace_utils
-from eosc_publisher import provider_utils
+from eosc_publisher import marketplace_utils, provider_utils
 
 from . import WALDUR_TARGET_CUSTOMER_UUID, logger, waldur_client
 
@@ -21,10 +20,12 @@ def process_offers():
         try:
             logger.info("Syncing offering %s", waldur_offering["name"])
             provider = provider_utils.sync_eosc_provider()
+            if provider is None:
+                continue
             if waldur_offering["state"] in ["Active", "Paused"]:
                 provider_contact = provider["users"][-1]
                 provider_resource = provider_utils.sync_eosc_resource(
-                    waldur_offering, provider_contact
+                    waldur_offering, provider_contact, provider["id"]
                 )
                 marketplace_utils.create_offer_for_waldur_offering(
                     waldur_offering, provider_resource
