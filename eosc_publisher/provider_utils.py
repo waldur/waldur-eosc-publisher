@@ -222,7 +222,7 @@ def get_all_resources_from_catalogue(token):
 def update_eosc_resource(
     waldur_offering, provider_contact, provider_id, resource_id, token
 ):
-    logger.error("Updating resource %s for provider %s", (resource_id, provider_id))
+    logger.error("Updating resource %s for provider %s", resource_id, provider_id)
     headers = {
         "Authorization": token,
     }
@@ -243,7 +243,7 @@ def update_eosc_resource(
     else:
         resource = response.json()
         logger.info(
-            "The esource %s has been successfully updated",
+            "The resource %s has been successfully updated",
             resource["name"],
         )
         return resource
@@ -251,7 +251,9 @@ def update_eosc_resource(
 
 def create_eosc_resource(waldur_offering, provider_contact, provider_id, token):
     logger.info(
-        "Creating a resource %s for provider %s", (waldur_offering["name"], provider_id)
+        "Creating a resource %s for provider %s",
+        waldur_offering["name"],
+        provider_id,
     )
     headers = {
         "Authorization": token,
