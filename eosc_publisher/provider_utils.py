@@ -159,7 +159,7 @@ def construct_resource_payload(
         ],
         # ???
         "targetUsers": ["target_user-businesses"],
-        "geographicalAvailabilities": ["EO"],
+        "geographicalAvailabilities": ["EU"],
         "languageAvailabilities": ["en"],
         "mainContact": {
             "firstName": provider_contact["name"],
