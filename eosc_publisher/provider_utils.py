@@ -390,13 +390,13 @@ def sync_eosc_provider():
     )
 
     token = get_provider_token()
-    provider = get_eosc_provider(provider_id, token)
+    existing_provider = get_eosc_provider(provider_id, token)
 
-    if provider is None:
-        provider_json = create_eosc_provider(waldur_customer, token)
-        return provider_json
+    if existing_provider is None:
+        created_provider = create_eosc_provider(waldur_customer, token)
+        return created_provider
     else:
         refreshed_provider_json = update_eosc_provider(
-            waldur_customer, provider_json["id"], token, provider_json["users"]
+            waldur_customer, existing_provider["id"], token, existing_provider["users"]
         )
         return refreshed_provider_json
