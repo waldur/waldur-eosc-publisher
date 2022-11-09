@@ -53,7 +53,7 @@ def sync_offers():
             logger.exception(
                 "The application crashed due to the following exception: %s", e
             )
-        sleep(60)
+        sleep(60 * 10)
 
 
 if __name__ == "__main__":
