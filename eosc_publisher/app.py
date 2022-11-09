@@ -6,7 +6,7 @@ from . import WALDUR_TARGET_CUSTOMER_UUID, logger, waldur_client
 
 
 def process_offers():
-    waldur_offerings = waldur_client.list_marketplace_offerings(
+    waldur_offerings = waldur_client.list_marketplace_public_offerings(
         {
             "customer_uuid": WALDUR_TARGET_CUSTOMER_UUID,
             "attributes": '{"enable_sync_to_eosc":true}',
