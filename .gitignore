@@ -1,4 +1,9 @@
 /venv
+*.egg
+*.egg-info
+*.pyc
+*.mo
+.DS_Store
 
 # Editor artifacts
 /.idea
