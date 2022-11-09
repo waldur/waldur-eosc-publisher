@@ -41,7 +41,7 @@ OFFER_LIST_URL = "/api/v1/resources/%s/offers/"
 OFFER_URL = "/api/v1/resources/%s/offers/%s"
 PROVIDER_SERVICES_URL = CATALOGUE_PREFIX + "%s/resource/all"
 PROVIDER_RESOURCE_URL = CATALOGUE_PREFIX + "resource/"
-CATALOGUE_SERVICES_URL = "service/byCatalogue/"
+CATALOGUE_SERVICES_URL = "resource/all"
 PROVIDER_URL = CATALOGUE_PREFIX + "provider/"
 waldur_client = WaldurClient(WALDUR_API_URL, WALDUR_TOKEN)
 

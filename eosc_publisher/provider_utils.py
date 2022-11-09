@@ -206,9 +206,10 @@ def get_all_resources_from_catalogue(token):
     response = requests.get(
         urllib.parse.urljoin(
             EOSC_PROVIDER_PORTAL_BASE_URL,
-            f"{CATALOGUE_SERVICES_URL}{EOSC_CATALOGUE_ID}",
+            CATALOGUE_SERVICES_URL,
         ),
         headers=headers,
+        params={"catalogue_id": EOSC_CATALOGUE_ID},
     )
     data = response.json()
     resource_list = data["results"]
@@ -300,6 +301,7 @@ def sync_eosc_resource(
 
 
 def update_eosc_provider(waldur_customer, provider_id, token, users):
+    logger.info("Updating the provider")
     provider_payload = construct_provider_payload(waldur_customer, provider_id, users)
 
     provider_url = urllib.parse.urljoin(
