@@ -23,9 +23,8 @@ def process_offers():
             if provider is None:
                 continue
             if waldur_offering["state"] in ["Active", "Paused"]:
-                provider_contact = provider["users"][-1]
                 provider_resource = provider_utils.sync_eosc_resource(
-                    waldur_offering, provider_contact, provider["id"]
+                    waldur_offering, provider["id"]
                 )
                 marketplace_utils.create_offer_for_waldur_offering(
                     waldur_offering, provider_resource
