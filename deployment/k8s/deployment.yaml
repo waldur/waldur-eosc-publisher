@@ -44,7 +44,5 @@ spec:
             value: "https://aai.eosc-portal.eu/oidc/token"
           - name: WALDUR_URL
             value: "https://share.neic.no/api/"
-          - name: CUSTOMER_UUID
-            value: "<CUSTOMER_UUID>"
           - name: EOSC_CATALOGUE_ID
             value: "eosc-nordic"
