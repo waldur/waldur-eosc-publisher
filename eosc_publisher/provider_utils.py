@@ -100,9 +100,7 @@ def construct_provider_payload(waldur_customer, provider_id=None, users=[]):
     return provider_payload
 
 
-def construct_resource_payload(
-    waldur_offering, provider_contact, provider_id, resource_id=None
-):
+def construct_resource_payload(waldur_offering, provider_id, resource_id=None):
     configuration = waldur_client.get_configuration()
     homeport_url = configuration["WALDUR_CORE"]["HOMEPORT_URL"]
     landing = urllib.parse.urljoin(
@@ -133,49 +131,95 @@ def construct_resource_payload(
             homeport_url,
             "images/login_logo.png",
         )
+
     resource_payload = {
-        "name": waldur_offering["name"],
-        "abbreviation": waldur_offering["name"],
-        "resourceOrganisation": provider_id,
-        "resourceProviders": [provider_id],
-        "webpage": landing,
-        "description": waldur_offering["description"] or "sample text",
-        "tagline": waldur_offering["name"].lower(),
-        "logo": logo_url,
-        "termsOfUse": landing,
-        "privacyPolicy": landing,
-        "scientificDomains": [
-            {
-                "scientificDomain": "scientific_domain-agricultural_sciences",
-                "scientificSubdomain": "scientific_subdomain-agricultural_sciences-agricultural_biotechnology",
-            }
-        ],
-        # ???
+        "abbreviation": waldur_offering.get(
+            "abbreviation",
+            "".join(
+                [
+                    word[0]
+                    for word in waldur_offering["name"].split()
+                    if word[0].isalpha()
+                ]
+            ),
+        ),
+        "accessModes": ["access_mode-other"],
+        "accessTypes": ["access_type-remote", "access_type-virtual"],
+        "accessPolicy": None,
+        "catalogueId": EOSC_CATALOGUE_ID,
         "categories": [
             {
                 "category": "category-aggregators_and_integrators-aggregators_and_integrators",
                 "subcategory": "subcategory-aggregators_and_integrators-aggregators_and_integrators-applications",
             }
         ],
-        # ???
-        "targetUsers": ["target_user-businesses"],
-        "geographicalAvailabilities": ["EU"],
+        "certifications": [],
+        "changeLog": [],
+        "description": waldur_offering["description"] or "sample text",
+        "fundingBody": [],
+        "fundingPrograms": [],
+        "geographicalAvailabilities": ["EO", "WW"],
+        "grantProjectNames": [],
+        "helpdeskEmail": helpdesk_email,
+        "helpdeskPage": "",  # https://puhuri.neic.no/
         "languageAvailabilities": ["en"],
+        "lastUpdate": None,
+        "lifeCycleStatus": None,
+        "logo": logo_url,
         "mainContact": {
-            "firstName": provider_contact["name"],
-            "lastName": provider_contact["surname"],
-            "email": provider_contact["email"] or DEFAULT_SUPPORT_EMAIL,
+            "firstName": "-",
+            "lastName": "-",
+            "email": DEFAULT_SUPPORT_EMAIL,
         },
+        "maintenance": None,
+        "multimedia": [],
+        "name": waldur_offering["name"],
+        "openSourceTechnologies": [],
+        "order": None,
+        "orderType": "order_type-order_required",
+        "paymentModel": None,
+        "pricing": None,
+        "privacyPolicy": landing,
         "publicContacts": [
             {
                 "email": public_email,
+                "firstName": None,
+                "lastName": None,
+                "organisation": None,
+                "phone": "",
+                "position": None,
             }
         ],
-        "helpdeskEmail": helpdesk_email,
+        "relatedPlatforms": [],
+        "relatedResources": [],
+        "requiredResources": [],
+        "resourceGeographicLocations": [],
+        "resourceLevel": None,
+        "resourceOrganisation": provider_id,
+        "resourceProviders": [provider_id],
+        "scientificDomains": [
+            {
+                "scientificDomain": "scientific_domain-generic",
+                "scientificSubdomain": "scientific_subdomain-generic-generic",
+            }
+        ],
         "securityContactEmail": security_email,
+        "standards": [],
+        "statusMonitoring": None,
+        "tagline": waldur_offering["name"].lower(),
+        "tags": [
+            "data-access",
+            "remote-access",
+            "collaboration",
+        ],
+        "targetUsers": ["target_user-researchers"],
+        "termsOfUse": landing,
+        "trainingInformation": None,
         "trl": "trl-9",
-        "catalogueId": EOSC_CATALOGUE_ID,
-        "orderType": "order_type-order_required",
+        "useCases": [],
+        "userManual": landing,
+        "version": None,
+        "webpage": landing,
     }
 
     if resource_id:
@@ -190,7 +234,9 @@ def get_resource_by_id(resource_id, token):
         "Authorization": token,
     }
     response = requests.get(
-        urllib.parse.urljoin(EOSC_PROVIDER_PORTAL_BASE_URL, f"resource/{resource_id}"),
+        urllib.parse.urljoin(
+            EOSC_PROVIDER_PORTAL_BASE_URL, PROVIDER_RESOURCE_URL + resource_id
+        ),
         headers=headers,
     )
     data = response.json()
@@ -219,15 +265,13 @@ def get_all_resources_from_catalogue(token):
     return resource_names_and_ids
 
 
-def update_eosc_resource(
-    waldur_offering, provider_contact, provider_id, resource_id, token
-):
+def update_eosc_resource(waldur_offering, provider_id, resource_id, token):
     logger.error("Updating resource %s for provider %s", resource_id, provider_id)
     headers = {
         "Authorization": token,
     }
     resource_payload = construct_resource_payload(
-        waldur_offering, provider_contact, provider_id, resource_id
+        waldur_offering, provider_id, resource_id
     )
     response = requests.put(
         urllib.parse.urljoin(EOSC_PROVIDER_PORTAL_BASE_URL, PROVIDER_RESOURCE_URL),
@@ -249,7 +293,7 @@ def update_eosc_resource(
         return resource
 
 
-def create_eosc_resource(waldur_offering, provider_contact, provider_id, token):
+def create_eosc_resource(waldur_offering, provider_id, token):
     logger.info(
         "Creating a resource %s for provider %s",
         waldur_offering["name"],
@@ -258,9 +302,7 @@ def create_eosc_resource(waldur_offering, provider_contact, provider_id, token):
     headers = {
         "Authorization": token,
     }
-    resource_payload = construct_resource_payload(
-        waldur_offering, provider_contact, provider_id
-    )
+    resource_payload = construct_resource_payload(waldur_offering, provider_id)
     response = requests.post(
         urllib.parse.urljoin(EOSC_PROVIDER_PORTAL_BASE_URL, PROVIDER_RESOURCE_URL),
         headers=headers,
@@ -278,9 +320,7 @@ def create_eosc_resource(waldur_offering, provider_contact, provider_id, token):
         return response.json()
 
 
-def sync_eosc_resource(
-    waldur_offering, provider_contact, provider_id
-):  # , eosc_provider_portal=None
+def sync_eosc_resource(waldur_offering, provider_id):  # , eosc_provider_portal=None
     logger.info("Syncing resource for offering %s", waldur_offering["name"])
     token = get_provider_token()
     resource_names_and_ids = get_all_resources_from_catalogue(token)
@@ -289,14 +329,12 @@ def sync_eosc_resource(
         existing_resource = get_resource_by_id(resource_id, token)
         logger.info("Resource already exists in EOSC: %s", existing_resource["name"])
         updated_existing_resource = update_eosc_resource(
-            waldur_offering, provider_contact, provider_id, resource_id, token
+            waldur_offering, provider_id, resource_id, token
         )
         return updated_existing_resource
     else:
         logger.info("The resource is missing, creating a new one")
-        resource = create_eosc_resource(
-            waldur_offering, provider_contact, provider_id, token
-        )
+        resource = create_eosc_resource(waldur_offering, provider_id, token)
         return resource
 
 
