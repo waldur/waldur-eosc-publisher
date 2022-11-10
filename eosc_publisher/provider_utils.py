@@ -12,7 +12,6 @@ from . import (
     EOSC_PROVIDER_PORTAL_BASE_URL,
     PROVIDER_RESOURCE_URL,
     PROVIDER_URL,
-    WALDUR_TARGET_CUSTOMER_UUID,
     logger,
     waldur_client,
 )
@@ -48,7 +47,7 @@ def construct_provider_payload(waldur_customer, provider_id=None, users=[]):
     [city, address] = waldur_customer["address"].split(maxsplit=1)
 
     service_provider = waldur_client.list_service_providers(
-        filters={"customer_uuid": WALDUR_TARGET_CUSTOMER_UUID}
+        filters={"customer_uuid": waldur_customer["uuid"]}
     )[0]
     description = (
         service_provider["description"]
@@ -354,10 +353,13 @@ def update_eosc_provider(waldur_customer, provider_id, token, users):
     )
 
     if provider_response.status_code not in [http_codes.OK, http_codes.CREATED]:
-        raise Exception(
-            "Unable to update the provider (id=%s). Code %s, error: %s"
-            % (provider_id, provider_response.status_code, provider_response.text)
+        logger.error(
+            "Unable to update the provider (id=%s). Code %s, error: %s",
+            provider_id,
+            provider_response.status_code,
+            provider_response.text,
         )
+        return
 
     provider = provider_response.json()
     logger.info("The provider %s has been successfully updated", provider["name"])
@@ -421,10 +423,11 @@ def get_eosc_provider(provider_id, token):
     )
 
 
-def sync_eosc_provider():
+def sync_eosc_provider(waldur_customer_uuid):
     waldur_customer = waldur_client._get_resource(
-        waldur_client.Endpoints.Customers, WALDUR_TARGET_CUSTOMER_UUID
+        waldur_client.Endpoints.Customers, waldur_customer_uuid
     )
+
     provider_id = waldur_customer["abbreviation"].lower()
     if not provider_id:
         logger.error("The customer %s does not have abbreviation, skipping it")
@@ -436,6 +439,7 @@ def sync_eosc_provider():
     token = get_provider_token()
     existing_provider = get_eosc_provider(provider_id, token)
 
+    # TODO: add customer disabling and deletion
     if existing_provider is None:
         created_provider = create_eosc_provider(waldur_customer, token)
         return created_provider
@@ -443,4 +447,4 @@ def sync_eosc_provider():
         refreshed_provider_json = update_eosc_provider(
             waldur_customer, existing_provider["id"], token, existing_provider["users"]
         )
-        return refreshed_provider_json
+        return refreshed_provider_json or existing_provider
