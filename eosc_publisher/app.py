@@ -7,7 +7,7 @@ from . import logger, waldur_client
 
 
 def process_offers():
-    waldur_offerings = waldur_client.list_marketplace_public_offerings(
+    waldur_offerings = waldur_client.list_marketplace_provider_offerings(
         {
             "attributes": '{"enable_sync_to_eosc":true}',
         },
