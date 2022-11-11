@@ -60,7 +60,7 @@ def construct_provider_payload(waldur_customer, provider_id=None, users=[]):
     provider_payload = {
         "abbreviation": waldur_customer["abbreviation"],
         "name": waldur_customer["name"],
-        "website": waldur_customer["homepage"],
+        "website": waldur_customer["homepage"] or "https://share.neic.no/",
         "legalEntity": False,
         "description": description,
         "logo": logo_url,
