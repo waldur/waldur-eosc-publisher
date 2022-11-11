@@ -68,7 +68,7 @@ def construct_provider_payload(waldur_customer, provider_id=None, users=[]):
             "streetNameAndNumber": address,
             "postalCode": waldur_customer["postal"] or "00000",
             "city": city,
-            "country": waldur_customer["country"],
+            "country": waldur_customer["country"] or "EU",
         },
         "participatingCountries": [waldur_customer["country"]],
         "catalogueId": EOSC_CATALOGUE_ID,
