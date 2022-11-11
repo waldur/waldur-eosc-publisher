@@ -53,9 +53,8 @@ def process_offers():
                 #     update_eosc_offers(eosc_resource, waldur_resource)
         except Exception as e:
             logger.exception(
-                "The offering %s (%s) can not be published due to the following exception: %s",
-                waldur_offering["name"],
-                waldur_offering["uuid"],
+                "The customer [uuid=%s] and its offerings can not be processed due to the following exception: %s",
+                customer_uuid,
                 e,
             )
         print("-" * 10)

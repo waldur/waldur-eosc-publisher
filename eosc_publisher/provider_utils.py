@@ -432,6 +432,7 @@ def create_eosc_provider(waldur_customer, token):
 
 
 def get_eosc_provider(provider_id, token):
+    logger.info("Fetching provider [id=%s] data.", provider_id)
     headers = {
         "Accept": "application/json",
         "Authorization": token,
