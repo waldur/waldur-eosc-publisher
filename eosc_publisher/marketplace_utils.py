@@ -248,44 +248,52 @@ def sync_offer(eosc_resource_id, waldur_offering):
         )
 
 
-def get_all_offers_from_resource(eosc_resource_id):
+def get_all_offers_for_eosc_resource(eosc_resource_id):
     headers = {
         "accept": "application/json",
         "X-User-Token": EOSC_MARKETPLACE_OFFERING_TOKEN,
     }
+
     response = requests.get(
         urllib.parse.urljoin(
             EOSC_MARKETPLACE_BASE_URL, OFFER_LIST_URL % (str(eosc_resource_id))
         ),
         headers=headers,
     )
-    if response.status_code == http_codes.NOT_FOUND:
-        raise Exception(
-            f"Could not find offers for resource with ID {eosc_resource_id}"
+
+    if response.status_code != http_codes.OK:
+        logger.warning(
+            "Unable to fetch offers for the resource. Code %s, details: %s",
+            eosc_resource_id,
+            response.json(),
         )
+        return
+
     data = response.json()
     data = data["offers"]
-    offers_names = [item["name"] for item in data]
-    offers_ids = [item["id"] for item in data]
-    return offers_names, offers_ids
+    offer_names = [item["name"] for item in data]
+    # offer_ids = [item["id"] for item in data]
+    return offer_names
 
 
 def get_or_create_eosc_resource_offer(
     eosc_resource, waldur_offering
 ):  # , eosc_marketplace=None
-    offers_names, offers_ids = get_all_offers_from_resource(
-        eosc_resource_id=eosc_resource["id"]
-    )
-    offer = sync_offer(
-        eosc_resource_id=eosc_resource["id"], waldur_offering=waldur_offering
-    )
-    if waldur_offering["name"] in offers_names:
+    offer_names = get_all_offers_for_eosc_resource(eosc_resource["id"])
+
+    if offer_names is None:
+        logger.warning("Skipping sync process.")
+        return None, None
+
+    offer = sync_offer(eosc_resource["id"], waldur_offering)
+
+    if waldur_offering["name"] in offer_names:
         return offer, True
     else:
         return offer, False
 
 
-def create_offer_for_waldur_offering(waldur_offering, provider_resource):
+def sync_marketplace_offer(waldur_offering, provider_resource):
     eosc_offer, offer_created = get_or_create_eosc_resource_offer(
         provider_resource, waldur_offering
     )
