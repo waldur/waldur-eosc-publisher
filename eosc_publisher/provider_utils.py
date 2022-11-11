@@ -264,7 +264,12 @@ def get_all_resources_from_catalogue(token):
     return resource_names_and_ids
 
 
-def update_eosc_resource(waldur_offering, provider_id, resource_id, token):
+def fetch_all_resources_from_eosc_catalogue():
+    token = get_provider_token()
+    return get_all_resources_from_catalogue(token)
+
+
+def update_resource(waldur_offering, provider_id, resource_id, token):
     logger.info("Updating resource %s for provider %s", resource_id, provider_id)
     headers = {
         "Authorization": token,
@@ -292,7 +297,7 @@ def update_eosc_resource(waldur_offering, provider_id, resource_id, token):
         return resource
 
 
-def create_eosc_resource(waldur_offering, provider_id, token):
+def create_resource(waldur_offering, provider_id, token):
     logger.info(
         "Creating a resource %s for provider %s",
         waldur_offering["name"],
@@ -344,34 +349,28 @@ def delete_resource(resource_id, token):
     return deleted_resource
 
 
-def sync_eosc_resource(waldur_offering, provider_id):  # , eosc_provider_portal=None
-    logger.info("Syncing resource for offering %s", waldur_offering["name"])
+def create_eosc_resource(waldur_offering, provider_id):
+    logger.info("The resource is missing, creating a new one.")
     token = get_provider_token()
-    resource_names_and_ids = get_all_resources_from_catalogue(token)
-    if waldur_offering["name"] in resource_names_and_ids:
-        resource_id = resource_names_and_ids[waldur_offering["name"]]
-        existing_resource = get_resource_by_id(resource_id, token)
-        logger.info("Resource already exists in EOSC: %s", existing_resource["name"])
-        updated_existing_resource = update_eosc_resource(
-            waldur_offering, provider_id, resource_id, token
-        )
-        return updated_existing_resource or existing_resource
-    else:
-        logger.info("The resource is missing, creating a new one.")
-        resource = create_eosc_resource(waldur_offering, provider_id, token)
-        return resource
+    resource = create_resource(waldur_offering, provider_id, token)
+    return resource
 
 
-def delete_eosc_resource(waldur_offering):
+def update_eosc_resource(waldur_offering, provider_id, resource_id):
+    logger.info("Resource already exists in EOSC: %s", waldur_offering["name"])
     token = get_provider_token()
-    resource_names_and_ids = get_all_resources_from_catalogue(token)
-    if waldur_offering["name"] in resource_names_and_ids:
-        logger.info("Resource is found, removing it.")
-        resource_id = resource_names_and_ids[waldur_offering["name"]]
-        deleted_resource = delete_resource(resource_id, token)
-        return deleted_resource
-    else:
-        logger.info("The resource is missing, skipping deletion.")
+    existing_resource = get_resource_by_id(resource_id, token)
+    updated_existing_resource = update_resource(
+        waldur_offering, provider_id, resource_id, token
+    )
+    return updated_existing_resource or existing_resource
+
+
+def delete_eosc_resource(resource_id):
+    token = get_provider_token()
+    logger.info("Resource is found, removing it from the portal")
+    deleted_resource = delete_resource(resource_id, token)
+    return deleted_resource
 
 
 def update_eosc_provider(waldur_customer, provider_id, token, users):
