@@ -319,6 +319,31 @@ def create_eosc_resource(waldur_offering, provider_id, token):
         return response.json()
 
 
+def delete_resource(resource_id, token):
+    logger.info("Deleting the resource %s", resource_id)
+    headers = {
+        "Authorization": token,
+    }
+
+    url = (
+        urllib.parse.urljoin(EOSC_PROVIDER_PORTAL_BASE_URL, PROVIDER_RESOURCE_URL)
+        + resource_id
+    )
+    response = requests.delete(url, headers=headers)
+
+    if response.status_code not in [http_codes.OK, http_codes.NO_CONTENT]:
+        logger.error(
+            "Unable to delete resource. Code: %s, details: %s",
+            response.status_code,
+            response.json(),
+        )
+        return
+
+    logger.info("The resource has been successfully removed from the catalogue")
+    deleted_resource = response.json()
+    return deleted_resource
+
+
 def sync_eosc_resource(waldur_offering, provider_id):  # , eosc_provider_portal=None
     logger.info("Syncing resource for offering %s", waldur_offering["name"])
     token = get_provider_token()
@@ -332,9 +357,21 @@ def sync_eosc_resource(waldur_offering, provider_id):  # , eosc_provider_portal=
         )
         return updated_existing_resource or existing_resource
     else:
-        logger.info("The resource is missing, creating a new one")
+        logger.info("The resource is missing, creating a new one.")
         resource = create_eosc_resource(waldur_offering, provider_id, token)
         return resource
+
+
+def delete_eosc_resource(waldur_offering):
+    token = get_provider_token()
+    resource_names_and_ids = get_all_resources_from_catalogue(token)
+    if waldur_offering["name"] in resource_names_and_ids:
+        logger.info("Resource is found, removing it.")
+        resource_id = resource_names_and_ids[waldur_offering["name"]]
+        deleted_resource = delete_resource(resource_id, token)
+        return deleted_resource
+    else:
+        logger.info("The resource is missing, skipping deletion.")
 
 
 def update_eosc_provider(waldur_customer, provider_id, token, users):
