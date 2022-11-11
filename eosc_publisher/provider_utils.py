@@ -57,8 +57,11 @@ def construct_provider_payload(waldur_customer, provider_id=None, users=[]):
         service_provider["description"]
         or "%s provider in EOSC portal" % waldur_customer["name"]
     )
+    abbreviation = waldur_customer["abbreviation"] or "".join(
+        w[0].upper() for w in waldur_customer["name"].split() if w[0].isalpha()
+    )
     provider_payload = {
-        "abbreviation": waldur_customer["abbreviation"],
+        "abbreviation": abbreviation,
         "name": waldur_customer["name"],
         "website": waldur_customer["homepage"] or "https://share.neic.no/",
         "legalEntity": False,
