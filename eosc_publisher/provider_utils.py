@@ -35,7 +35,7 @@ def get_provider_token():
 
 def construct_provider_payload(waldur_customer, provider_id=None, users=[]):
     if waldur_customer["image"]:
-        logo_url = waldur_customer["homepage"]
+        logo_url = waldur_customer["image"]
     else:
         configuration = waldur_client.get_configuration()
         homeport_url = configuration["WALDUR_CORE"]["HOMEPORT_URL"]
@@ -77,12 +77,10 @@ def construct_provider_payload(waldur_customer, provider_id=None, users=[]):
     if provider_id:
         provider_payload["id"] = provider_id
 
-    first_owner = waldur_customer["owners"][0]
-    [first_name, last_name] = first_owner["full_name"].split(maxsplit=1)
     provider_payload["mainContact"] = {
-        "firstName": first_name,
-        "lastName": last_name,
-        "email": first_owner["email"],
+        "firstName": "-",
+        "lastName": "-",
+        "email": DEFAULT_SUPPORT_EMAIL,
         "phone": waldur_customer["phone_number"],
     }
     provider_payload["publicContacts"] = [
