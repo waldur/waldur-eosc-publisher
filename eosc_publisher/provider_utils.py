@@ -81,7 +81,6 @@ def construct_provider_payload(waldur_customer, provider_id=None, users=[]):
         "firstName": "-",
         "lastName": "-",
         "email": DEFAULT_SUPPORT_EMAIL,
-        "phone": waldur_customer["phone_number"],
     }
     provider_payload["publicContacts"] = [
         {"email": waldur_customer["email"] or DEFAULT_SUPPORT_EMAIL}
@@ -469,7 +468,11 @@ def sync_eosc_provider(waldur_customer_uuid):
 
     provider_id = waldur_customer["abbreviation"].lower()
     if not provider_id:
-        logger.error("The customer %s does not have abbreviation, skipping it")
+        logger.error(
+            "The customer %s (%s) does not have abbreviation, skipping it",
+            waldur_customer["name"],
+            waldur_customer_uuid,
+        )
         return
     logger.info(
         "Syncing customer %s (provider %s)", waldur_customer["name"], provider_id
