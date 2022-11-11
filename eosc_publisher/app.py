@@ -25,6 +25,11 @@ def process_offers():
     ) in customer_to_offerings_mapping.items():
         try:
             provider = provider_utils.sync_eosc_provider(customer_uuid)
+
+            if provider is None:
+                logger.warning("Unable to sync provider, skipping the offerings")
+                continue
+
             logger.info(
                 "Syncing %s offerings of the provider", len(waldur_customer_offerings)
             )

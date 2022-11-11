@@ -44,7 +44,11 @@ def construct_provider_payload(waldur_customer, provider_id=None, users=[]):
             "images/login_logo.png",
         )
 
-    [city, address] = waldur_customer["address"].split(maxsplit=1)
+    address_split = waldur_customer["address"].split(maxsplit=1)
+    if address_split:
+        [city, address] = address_split
+    else:
+        [city, address] = ["unknown", "unknown"]
 
     service_provider = waldur_client.list_service_providers(
         filters={"customer_uuid": waldur_customer["uuid"]}
