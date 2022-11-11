@@ -66,7 +66,7 @@ def construct_provider_payload(waldur_customer, provider_id=None, users=[]):
         "logo": logo_url,
         "location": {
             "streetNameAndNumber": address,
-            "postalCode": waldur_customer["postal"],
+            "postalCode": waldur_customer["postal"] or "00000",
             "city": city,
             "country": waldur_customer["country"],
         },
