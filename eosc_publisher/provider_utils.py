@@ -71,7 +71,7 @@ def construct_provider_payload(waldur_customer, provider_id=None, users=[]):
             "streetNameAndNumber": address,
             "postalCode": waldur_customer["postal"] or "00000",
             "city": city,
-            "country": waldur_customer["country"] or "EU",
+            "country": waldur_customer["country"] or "OT",
         },
         "participatingCountries": [waldur_customer["country"]],
         "catalogueId": EOSC_CATALOGUE_ID,
@@ -135,17 +135,12 @@ def construct_resource_payload(waldur_offering, provider_id, resource_id=None):
             "images/login_logo.png",
         )
 
+    abbreviation = "".join(
+        [word[0] for word in waldur_offering["name"].split() if word[0].isalpha()]
+    )
+
     resource_payload = {
-        "abbreviation": waldur_offering.get(
-            "abbreviation",
-            "".join(
-                [
-                    word[0]
-                    for word in waldur_offering["name"].split()
-                    if word[0].isalpha()
-                ]
-            ),
-        ),
+        "abbreviation": abbreviation,
         "accessModes": ["access_mode-other"],
         "accessTypes": ["access_type-remote", "access_type-virtual"],
         "accessPolicy": None,
