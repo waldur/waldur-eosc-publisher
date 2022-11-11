@@ -265,7 +265,7 @@ def get_all_resources_from_catalogue(token):
 
 
 def update_eosc_resource(waldur_offering, provider_id, resource_id, token):
-    logger.error("Updating resource %s for provider %s", resource_id, provider_id)
+    logger.info("Updating resource %s for provider %s", resource_id, provider_id)
     headers = {
         "Authorization": token,
     }
@@ -278,7 +278,7 @@ def update_eosc_resource(waldur_offering, provider_id, resource_id, token):
         json=resource_payload,
     )
     if response.status_code not in [200, 201]:
-        logger.error(
+        logger.warning(
             "Error during updating of resource in the provider portal. Code %s, error: %s",
             response.status_code,
             response.text,
@@ -330,7 +330,7 @@ def sync_eosc_resource(waldur_offering, provider_id):  # , eosc_provider_portal=
         updated_existing_resource = update_eosc_resource(
             waldur_offering, provider_id, resource_id, token
         )
-        return updated_existing_resource
+        return updated_existing_resource or existing_resource
     else:
         logger.info("The resource is missing, creating a new one")
         resource = create_eosc_resource(waldur_offering, provider_id, token)
@@ -353,7 +353,7 @@ def update_eosc_provider(waldur_customer, provider_id, token, users):
     )
 
     if provider_response.status_code not in [http_codes.OK, http_codes.CREATED]:
-        logger.error(
+        logger.warning(
             "Unable to update the provider (id=%s). Code %s, error: %s",
             provider_id,
             provider_response.status_code,
@@ -418,7 +418,7 @@ def get_eosc_provider(provider_id, token):
         return provider_json
 
     raise Exception(
-        "Unable to sync a provider. Code %s, error: %s"
+        "Unable to get a provider. Code %s, error: %s"
         % (provider_response.status_code, provider_response.text)
     )
 
@@ -439,7 +439,7 @@ def sync_eosc_provider(waldur_customer_uuid):
     token = get_provider_token()
     existing_provider = get_eosc_provider(provider_id, token)
 
-    # TODO: add customer disabling and deletion
+    # TODO: add customer deletion
     if existing_provider is None:
         created_provider = create_eosc_provider(waldur_customer, token)
         return created_provider

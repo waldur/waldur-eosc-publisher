@@ -27,6 +27,9 @@ def process_offers():
     ) in customer_to_offerings_mapping.items():
         try:
             provider = provider_utils.sync_eosc_provider(customer_uuid)
+            logger.info(
+                "Syncing %s offerings of the provider", len(waldur_customer_offerings)
+            )
             for waldur_offering in waldur_customer_offerings:
                 logger.info(
                     "Syncing offering %s from %s",
@@ -38,7 +41,7 @@ def process_offers():
                     provider_resource = provider_utils.sync_eosc_resource(
                         waldur_offering, provider["id"]
                     )
-                    marketplace_utils.create_offer_for_waldur_offering(
+                    marketplace_utils.sync_marketplace_offer(
                         waldur_offering, provider_resource
                     )
                 elif waldur_offering["state"] in ["Archived", "Draft"]:
