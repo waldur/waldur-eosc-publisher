@@ -45,6 +45,7 @@ def process_offers():
                         waldur_offering, provider_resource
                     )
                 elif waldur_offering["state"] in ["Archived", "Draft"]:
+                    provider_utils.delete_eosc_resource(waldur_offering)
                     marketplace_utils.deactivate_offer(waldur_offering)
                 # if not eosc_resource_created and not is_resource_up_to_date(eosc_resource, waldur_resource):
                 #     update_eosc_resource(eosc_resource, waldur_resource)
@@ -57,6 +58,7 @@ def process_offers():
                 waldur_offering["uuid"],
                 e,
             )
+        print("-" * 10)
 
 
 def sync_offers():
@@ -67,6 +69,7 @@ def sync_offers():
             logger.exception(
                 "The application crashed due to the following exception: %s", e
             )
+        print("/" * 10)
         sleep(60 * 10)
 
 
