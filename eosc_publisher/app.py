@@ -33,6 +33,8 @@ def process_offers():
             logger.info(
                 "Syncing %s offerings of the provider", len(waldur_customer_offerings)
             )
+
+            # TODO: add an ID value to customer.backend_id field
             provider_id = provider["id"]
 
             for waldur_offering in waldur_customer_offerings:
@@ -47,6 +49,7 @@ def process_offers():
                         "Syncing resource for offering %s", waldur_offering["name"]
                     )
 
+                    # TODO: use the value from options for lookup instead of name
                     if waldur_offering["name"] in eosc_resources:
                         resource_id = eosc_resources[waldur_offering["name"]]
                         provider_resource = provider_utils.update_eosc_resource(

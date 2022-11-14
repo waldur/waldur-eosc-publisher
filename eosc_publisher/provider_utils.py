@@ -19,6 +19,10 @@ from . import (
 DEFAULT_SUPPORT_EMAIL = "support@puhuri.io"
 
 
+def construct_abbreviation(name):
+    return "".join(w[0].upper() for w in name.split() if w[0].isalpha())
+
+
 def get_provider_token():
     data = {
         "grant_type": "refresh_token",
@@ -57,8 +61,8 @@ def construct_provider_payload(waldur_customer, provider_id=None, users=[]):
         service_provider["description"]
         or "%s provider in EOSC portal" % waldur_customer["name"]
     )
-    abbreviation = waldur_customer["abbreviation"] or "".join(
-        w[0].upper() for w in waldur_customer["name"].split() if w[0].isalpha()
+    abbreviation = waldur_customer["abbreviation"] or construct_abbreviation(
+        waldur_customer["name"]
     )
     provider_payload = {
         "abbreviation": abbreviation,
@@ -135,9 +139,10 @@ def construct_resource_payload(waldur_offering, provider_id, resource_id=None):
             "images/login_logo.png",
         )
 
-    abbreviation = "".join(
-        [word[0] for word in waldur_offering["name"].split() if word[0].isalpha()]
-    )
+    # TODO: before fixing abbreviation construction,
+    # add ID of provider resource to waldur offering options and
+    # use the value from options for lookup instead of name
+    abbreviation = construct_abbreviation(waldur_offering["name"])
 
     resource_payload = {
         "abbreviation": abbreviation,
@@ -464,14 +469,10 @@ def sync_eosc_provider(waldur_customer_uuid):
         waldur_client.Endpoints.Customers, waldur_customer_uuid
     )
 
-    provider_id = waldur_customer["abbreviation"].lower()
-    if not provider_id:
-        logger.error(
-            "The customer %s (%s) does not have abbreviation, skipping it",
-            waldur_customer["name"],
-            waldur_customer_uuid,
-        )
-        return
+    provider_id = (
+        waldur_customer["abbreviation"]
+        or construct_abbreviation(waldur_customer["name"])
+    ).lower()
     logger.info(
         "Syncing customer %s (provider %s)", waldur_customer["name"], provider_id
     )
