@@ -12,4 +12,3 @@
 - `CLIENT_ID` - client id to get access token
 - `REFRESH_TOKEN_URL` - refresh token request url
 - `WALDUR_URL` - ETAIS url
-- `ORGANIZATION_EID` - ID of organization in EOSC Marketplace for resources creation
