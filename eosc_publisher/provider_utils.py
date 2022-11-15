@@ -20,7 +20,11 @@ DEFAULT_SUPPORT_EMAIL = "support@puhuri.io"
 
 
 def construct_abbreviation(name):
-    return "".join(w[0].upper() for w in name.split() if w[0].isalpha())
+    name_split = name.split()
+    if len(name_split) > 1:
+        return "".join(w[0].upper() for w in name.split() if w[0].isalnum())
+    else:
+        return name.upper()
 
 
 def get_provider_token():
@@ -140,7 +144,7 @@ def construct_resource_payload(waldur_offering, provider_id, resource_id=None):
         )
 
     # TODO: before fixing abbreviation construction,
-    # add ID of provider resource to waldur offering options and
+    # add ID of a resource to waldur offering options and
     # use the value from options for lookup instead of name
     abbreviation = construct_abbreviation(waldur_offering["name"])
 
@@ -258,7 +262,7 @@ def get_all_resources_from_catalogue(token):
             CATALOGUE_SERVICES_URL,
         ),
         headers=headers,
-        params={"catalogue_id": EOSC_CATALOGUE_ID},
+        params={"catalogue_id": EOSC_CATALOGUE_ID, "quantity": 1000},
     )
     data = response.json()
     resource_list = data["results"]
