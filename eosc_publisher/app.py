@@ -41,8 +41,9 @@ def process_offers():
                 ]
             ):
                 logger.info(
-                    "The provider does not exists and all the offerings are inactive. Skipping the customer."
+                    "The provider does not exist and all the offerings are inactive. Skipping the customer."
                 )
+                logger.info("-" * 20)
                 continue
 
             provider = provider_utils.sync_eosc_provider(
