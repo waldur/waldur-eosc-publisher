@@ -24,11 +24,30 @@ def process_offers():
         waldur_customer_offerings,
     ) in customer_to_offerings_mapping.items():
         try:
-            provider = provider_utils.sync_eosc_provider(customer_uuid)
+            logger.info(
+                "Processing customer %s [uuid=%s]",
+                waldur_customer_offerings[0]["customer_name"],
+                customer_uuid,
+            )
+            waldur_customer = waldur_client._get_resource(
+                waldur_client.Endpoints.Customers, customer_uuid
+            )
 
-            if provider is None:
-                logger.warning("Unable to sync provider, skipping the offerings")
+            existing_provider = provider_utils.get_eosc_provider(waldur_customer)
+            if existing_provider is None and all(
+                [
+                    offering["state"] in ["Archived", "Draft"]
+                    for offering in waldur_customer_offerings
+                ]
+            ):
+                logger.info(
+                    "The provider does not exists and all the offerings are inactive. Skipping the customer."
+                )
                 continue
+
+            provider = provider_utils.sync_eosc_provider(
+                waldur_customer, existing_provider
+            )
 
             logger.info(
                 "Syncing %s offerings of the provider", len(waldur_customer_offerings)
