@@ -97,14 +97,6 @@ def construct_provider_payload(waldur_customer, provider_id=None, users=[]):
         {"email": waldur_customer["email"] or DEFAULT_SUPPORT_EMAIL}
     ]
 
-    if waldur_customer["domain"]:
-        provider_payload["scientificDomains"] = [
-            {
-                "scientificDomain": waldur_customer["domain"],
-                "scientificSubdomain": waldur_customer["domain"],
-            }
-        ]
-
     if waldur_customer["division"]:
         provider_payload["affiliations"] = [waldur_customer["division"]]
 
@@ -381,7 +373,7 @@ def delete_eosc_resource(resource_id):
     return deleted_resource
 
 
-def update_eosc_provider(waldur_customer, provider_id, token, users):
+def update_provider(waldur_customer, provider_id, token, users):
     logger.info("Updating the provider")
     provider_payload = construct_provider_payload(waldur_customer, provider_id, users)
 
@@ -410,7 +402,7 @@ def update_eosc_provider(waldur_customer, provider_id, token, users):
     return provider
 
 
-def create_eosc_provider(waldur_customer, token):
+def create_provider(waldur_customer, token):
     logger.info("Creating a provider for customer %s", waldur_customer["name"])
     provider_payload = construct_provider_payload(waldur_customer)
 
@@ -438,7 +430,7 @@ def create_eosc_provider(waldur_customer, token):
     return provider
 
 
-def get_eosc_provider(provider_id, token):
+def get_provider(provider_id, token):
     logger.info("Fetching provider [id=%s] data.", provider_id)
     headers = {
         "Accept": "application/json",
@@ -468,28 +460,35 @@ def get_eosc_provider(provider_id, token):
     )
 
 
-def sync_eosc_provider(waldur_customer_uuid):
-    waldur_customer = waldur_client._get_resource(
-        waldur_client.Endpoints.Customers, waldur_customer_uuid
-    )
-
+def get_eosc_provider(waldur_customer):
     provider_id = (
         waldur_customer["abbreviation"]
         or construct_abbreviation(waldur_customer["name"])
     ).lower()
+
+    token = get_provider_token()
+
+    provider = get_provider(provider_id, token)
+    return provider
+
+
+def sync_eosc_provider(waldur_customer, existing_provider):
+    provider_id = (
+        waldur_customer["abbreviation"]
+        or construct_abbreviation(waldur_customer["name"])
+    ).lower()
+
     logger.info(
         "Syncing customer %s (provider %s)", waldur_customer["name"], provider_id
     )
 
     token = get_provider_token()
-    existing_provider = get_eosc_provider(provider_id, token)
-
     # TODO: add customer deletion
     if existing_provider is None:
-        created_provider = create_eosc_provider(waldur_customer, token)
+        created_provider = create_provider(waldur_customer, token)
         return created_provider
     else:
-        refreshed_provider_json = update_eosc_provider(
+        refreshed_provider_json = update_provider(
             waldur_customer, existing_provider["id"], token, existing_provider["users"]
         )
         return refreshed_provider_json or existing_provider
