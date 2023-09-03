@@ -36,6 +36,9 @@ def get_provider_token():
     }
 
     response = requests.post(EOSC_AAI_REFRESH_TOKEN_URL, data=data)
+    if response.status_code != 200:
+        logger.error(f'Failed to get access token, {response.status_code}. {response.text}')
+        return None
     response_data = response.json()
     token = response_data["access_token"]
     return token
@@ -269,7 +272,10 @@ def get_all_resources_from_catalogue(token):
 
 def fetch_all_resources_from_eosc_catalogue():
     token = get_provider_token()
-    return get_all_resources_from_catalogue(token)
+    if token:
+        return get_all_resources_from_catalogue(token)
+    else:
+        return None
 
 
 def update_resource(waldur_offering, provider_id, resource_id, token):

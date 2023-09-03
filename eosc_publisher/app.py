@@ -18,7 +18,8 @@ def process_offers():
         customer_to_offerings_mapping[customer_uuid].append(waldur_offering)
 
     eosc_resources = provider_utils.fetch_all_resources_from_eosc_catalogue()
-
+    if not eosc_resources:
+        return
     for (
         customer_uuid,
         waldur_customer_offerings,
