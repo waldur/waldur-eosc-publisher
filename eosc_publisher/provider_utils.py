@@ -182,7 +182,7 @@ def construct_resource_payload(waldur_offering, provider_id, resource_id=None):
         "orderType": "order_type-order_required",
         "paymentModel": None,
         "pricing": None,
-        "privacyPolicy": waldur_offering["privacy_policy_link"],
+        "privacyPolicy": waldur_offering["privacy_policy_link"] or 'https://placeholder.example.com',
         "publicContacts": [
             {
                 "email": public_email,
@@ -216,7 +216,7 @@ def construct_resource_payload(waldur_offering, provider_id, resource_id=None):
             "collaboration",
         ],
         "targetUsers": ["target_user-researchers"],
-        "termsOfUse": waldur_offering["terms_of_service_link"],
+        "termsOfUse": waldur_offering["terms_of_service_link"] or 'https://placeholder.example.com',
         "trainingInformation": None,
         "trl": "trl-9",
         "useCases": [],
