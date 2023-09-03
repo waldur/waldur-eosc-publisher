@@ -72,7 +72,7 @@ def construct_provider_payload(waldur_customer, provider_id=None, users=[]):
         "abbreviation": abbreviation,
         "name": waldur_customer["name"],
         "website": waldur_customer["homepage"] or "https://share.neic.no/",
-        "legalEntity": False,
+        "legalEntity": True,
         "description": description,
         "logo": logo_url,
         "location": {
@@ -154,7 +154,7 @@ def construct_resource_payload(waldur_offering, provider_id, resource_id=None):
         ],
         "certifications": [],
         "changeLog": [],
-        "description": waldur_offering["description"] or "sample text",
+        "description": waldur_offering["description"] or "None",
         "fundingBody": [],
         "fundingPrograms": [],
         "geographicalAvailabilities": ["EO", "WW"],
@@ -178,7 +178,7 @@ def construct_resource_payload(waldur_offering, provider_id, resource_id=None):
         "orderType": "order_type-order_required",
         "paymentModel": None,
         "pricing": None,
-        "privacyPolicy": landing,
+        "privacyPolicy": waldur_offering["privacy_policy_link"],
         "publicContacts": [
             {
                 "email": public_email,
@@ -212,11 +212,11 @@ def construct_resource_payload(waldur_offering, provider_id, resource_id=None):
             "collaboration",
         ],
         "targetUsers": ["target_user-researchers"],
-        "termsOfUse": landing,
+        "termsOfUse": waldur_offering["terms_of_service_link"],
         "trainingInformation": None,
         "trl": "trl-9",
         "useCases": [],
-        "userManual": landing,
+        "userManual": "",
         "version": None,
         "webpage": landing,
     }
