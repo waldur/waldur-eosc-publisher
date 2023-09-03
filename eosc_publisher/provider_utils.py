@@ -406,7 +406,7 @@ def update_provider(waldur_customer, provider_id, token, users):
         )
         return
 
-    logger.info('TEMP', provider_response.text)
+    logger.info('TEMP: %s' % provider_response.text)
     provider = provider_response.json()
     logger.info("The provider %s has been successfully updated", provider["name"])
     return provider
