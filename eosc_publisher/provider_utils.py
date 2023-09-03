@@ -256,6 +256,9 @@ def get_all_resources_from_catalogue(token):
         headers=headers,
         params={"catalogue_id": EOSC_CATALOGUE_ID, "quantity": 1000},
     )
+    if response.status_code != 200:
+        logger.error(f"Failed to get list of resources with code {response.status_code}. Message: {response.text}")
+        return []
     data = response.json()
     resource_list = data["results"]
     resource_names_and_ids = {
