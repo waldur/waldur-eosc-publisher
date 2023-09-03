@@ -41,7 +41,7 @@ spec:
           - name: CLIENT_ID
             value: "<CLIENT_ID>"
           - name: REFRESH_TOKEN_URL
-            value: "https://aai.eosc-portal.eu/oidc/token"
+            value: "https://aai.eosc-portal.eu/auth/realms/core/protocol/openid-connect/token"
           - name: WALDUR_URL
             value: "https://share.neic.no/api/"
           - name: EOSC_CATALOGUE_ID
