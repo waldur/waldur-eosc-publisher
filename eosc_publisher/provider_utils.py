@@ -1,4 +1,5 @@
 import urllib.parse
+import json.decoder
 
 import requests
 from requests.status_codes import codes as http_codes
@@ -406,10 +407,14 @@ def update_provider(waldur_customer, provider_id, token, users):
         )
         return
 
-    logger.info('TEMP: %s' % provider_response.text)
-    provider = provider_response.json()
-    logger.info("The provider %s has been successfully updated", provider["name"])
-    return provider
+    try:
+        provider = provider_response.json()
+        logger.info("The provider %s has been successfully updated", provider["name"])
+        return provider
+    except json.decoder.JSONDecodeError:
+        logger.info(f"Didn't update:{provider_response.status_code}, {provider_response.text}")
+        # Provider portal return XML wtih error message and 200 response code if entry hasn't been updated
+        return None
 
 
 def create_provider(waldur_customer, token):
