@@ -86,7 +86,7 @@ def process_offers():
                     )
                 elif waldur_offering["state"] in ["Archived", "Draft"]:
                     if waldur_offering["name"] in eosc_resources:
-                        provider_utils.delete_eosc_resource(waldur_offering)
+                        provider_utils.delete_eosc_resource(waldur_offering["name"])
                         marketplace_utils.deactivate_offer(waldur_offering)
                     else:
                         logger.info("The resource is missing, skipping deletion.")
