@@ -1,5 +1,5 @@
-import urllib.parse
 import json.decoder
+import urllib.parse
 
 import requests
 from requests.status_codes import codes as http_codes
@@ -38,7 +38,9 @@ def get_provider_token():
 
     response = requests.post(EOSC_AAI_REFRESH_TOKEN_URL, data=data)
     if response.status_code != 200:
-        logger.error(f'Failed to get access token, {response.status_code}. {response.text}')
+        logger.error(
+            f"Failed to get access token, {response.status_code}. {response.text}"
+        )
         return None
     response_data = response.json()
     token = response_data["access_token"]
@@ -182,7 +184,8 @@ def construct_resource_payload(waldur_offering, provider_id, resource_id=None):
         "orderType": "order_type-order_required",
         "paymentModel": None,
         "pricing": None,
-        "privacyPolicy": waldur_offering["privacy_policy_link"] or 'https://placeholder.example.com',
+        "privacyPolicy": waldur_offering["privacy_policy_link"]
+        or "https://placeholder.example.com",
         "publicContacts": [
             {
                 "email": public_email,
@@ -216,7 +219,8 @@ def construct_resource_payload(waldur_offering, provider_id, resource_id=None):
             "collaboration",
         ],
         "targetUsers": ["target_user-researchers"],
-        "termsOfUse": waldur_offering["terms_of_service_link"] or 'https://placeholder.example.com',
+        "termsOfUse": waldur_offering["terms_of_service_link"]
+        or "https://placeholder.example.com",
         "trainingInformation": None,
         "trl": "trl-9",
         "useCases": [],
@@ -261,7 +265,9 @@ def get_all_resources_from_catalogue(token):
         params={"catalogue_id": EOSC_CATALOGUE_ID, "quantity": 1000},
     )
     if response.status_code != 200:
-        logger.error(f"Failed to get list of resources with code {response.status_code}. Message: {response.text}")
+        logger.error(
+            f"Failed to get list of resources with code {response.status_code}. Message: {response.text}"
+        )
         return []
     data = response.json()
     resource_list = data["results"]
@@ -299,7 +305,13 @@ def update_resource(waldur_offering, provider_id, resource_id, token):
             response.text,
         )
     else:
-        resource = response.json()
+        try:
+            resource = response.json()
+        except json.JSONDecodeError as err:
+            logger.error("Error parsing %s", response.text)
+            logger.exception(err)
+            return
+
         logger.info(
             "The resource %s has been successfully updated",
             resource["name"],
@@ -412,7 +424,9 @@ def update_provider(waldur_customer, provider_id, token, users):
         logger.info("The provider %s has been successfully updated", provider["name"])
         return provider
     except json.decoder.JSONDecodeError:
-        logger.info(f"Didn't update:{provider_response.status_code}, {provider_response.text}")
+        logger.info(
+            f"Didn't update:{provider_response.status_code}, {provider_response.text}"
+        )
         # Provider portal return XML wtih error message and 200 response code if entry hasn't been updated
         return None
 
