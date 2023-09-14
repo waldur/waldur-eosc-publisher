@@ -362,7 +362,7 @@ def delete_resource(resource_id, token):
         logger.error(
             "Unable to delete resource. Code: %s, details: %s",
             response.status_code,
-            response.json(),
+            response.text,
         )
         return
 
