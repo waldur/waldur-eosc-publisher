@@ -308,6 +308,8 @@ def update_resource(waldur_offering, provider_id, resource_id, token):
         try:
             resource = response.json()
         except json.JSONDecodeError as err:
+            if "There are no changes in the Service" in response.text:
+                return
             logger.error("Error parsing %s", response.text)
             logger.exception(err)
             return
@@ -425,7 +427,7 @@ def update_provider(waldur_customer, provider_id, token, users):
         return provider
     except json.decoder.JSONDecodeError:
         logger.info(
-            f"Didn't update:{provider_response.status_code}, {provider_response.text}"
+            f"Didn't update: {provider_response.status_code}, {provider_response.text}"
         )
         # Provider portal return XML wtih error message and 200 response code if entry hasn't been updated
         return None
