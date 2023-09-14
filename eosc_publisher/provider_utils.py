@@ -392,7 +392,7 @@ def update_eosc_resource(waldur_offering, provider_id, resource_id):
 
 def delete_eosc_resource(resource_id):
     token = get_provider_token()
-    logger.info("Resource is found, removing it from the portal")
+    logger.info("Resource %s is found, removing it from the portal", resource_id)
     deleted_resource = delete_resource(resource_id, token)
     return deleted_resource
 
