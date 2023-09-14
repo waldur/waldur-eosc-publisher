@@ -263,8 +263,9 @@ def get_all_offers_for_eosc_resource(eosc_resource_id):
 
     if response.status_code != http_codes.OK:
         logger.warning(
-            "Unable to fetch offers for the resource. Code %s, details: %s",
+            "Unable to fetch offers for the resource [%s]. Code %s, details: %s",
             eosc_resource_id,
+            response.status_code,
             response.json(),
         )
         return
