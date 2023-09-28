@@ -79,6 +79,7 @@ def construct_provider_payload(waldur_customer, provider_id=None, users=[]):
         "name": waldur_customer["name"],
         "website": waldur_customer["homepage"] or "https://share.neic.no/",
         "legalEntity": True,
+        "legalStatus": "provider_legal_status-public_legal_entity",
         "description": description,
         "logo": logo_url,
         "location": {
