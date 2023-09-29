@@ -181,7 +181,7 @@ def construct_resource_payload(waldur_offering, provider_id, resource_id=None):
         "multimedia": [],
         "name": waldur_offering["name"],
         "openSourceTechnologies": [],
-        "order": None,
+        "order": landing,
         "orderType": "order_type-order_required",
         "paymentModel": None,
         "pricing": None,
